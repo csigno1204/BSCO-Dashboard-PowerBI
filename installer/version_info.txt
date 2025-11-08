@@ -1,0 +1,45 @@
+# UTF-8
+#
+# Informations de version pour l'exécutable Windows
+# Utilisé par PyInstaller
+#
+
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    # Version du fichier (format: Major.Minor.Patch.Build)
+    filevers=(1, 0, 0, 0),
+    # Version du produit
+    prodvers=(1, 0, 0, 0),
+    # Masque pour la version du fichier
+    mask=0x3f,
+    # Flags (0x0 = release, 0x1 = debug)
+    flags=0x0,
+    # Système d'exploitation cible (0x40004 = Windows NT)
+    OS=0x40004,
+    # Type de fichier (0x1 = Application)
+    fileType=0x1,
+    # Sous-type de fichier
+    subtype=0x0,
+    # Date de création (non utilisé)
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo(
+      [
+      StringTable(
+        u'040C04B0',  # 040C = Français, 04B0 = Unicode
+        [
+        StringStruct(u'CompanyName', u'BSCO Solutions'),
+        StringStruct(u'FileDescription', u'Dashboard Bexio vers Power BI - Extraction et transformation automatique'),
+        StringStruct(u'FileVersion', u'1.0.0.0'),
+        StringStruct(u'InternalName', u'BexioDashboard'),
+        StringStruct(u'LegalCopyright', u'Copyright © 2025 BSCO Solutions. Tous droits réservés.'),
+        StringStruct(u'OriginalFilename', u'BexioDashboard.exe'),
+        StringStruct(u'ProductName', u'Dashboard Bexio Power BI'),
+        StringStruct(u'ProductVersion', u'1.0.0.0'),
+        StringStruct(u'Comments', u'Solution complète pour extraire vos données Bexio et les transformer pour Power BI. Inclut interface graphique, alertes intelligentes, rapports PDF et plus.'),
+        ])
+      ]),
+    VarFileInfo([VarStruct(u'Translation', [1036, 1200])])  # 1036 = Français, 1200 = Unicode
+  ]
+)
