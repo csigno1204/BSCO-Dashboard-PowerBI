@@ -52,3 +52,27 @@ Thumbs.db
 # Logs
 *.log
 logs/
+!logs/.gitkeep
+
+# Build et Distribution - PyInstaller / Inno Setup
+build/
+dist/
+*.spec.bak
+Output/
+installer/Output/
+
+# Installeurs générés (.exe) - Ne pas versionner
+*.exe
+!dist/installer/.gitkeep
+
+# Fichiers temporaires et backups
+backups/
+!backups/.gitkeep
+temp/
+tmp/
+*.bak
+
+# Bases de données
+*.db
+*.sqlite
+*.sqlite3
