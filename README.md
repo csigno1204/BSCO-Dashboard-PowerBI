@@ -36,38 +36,68 @@ Le système peut extraire et transformer:
 
 ## 🚀 Démarrage Rapide
 
-### 1. Installation
+### Installation Automatique
 
-```bash
-# Cloner le projet
+**Windows:**
+```cmd
+# 1. Télécharger le projet
 git clone <url-du-repo>
 cd BSCO-Dashboard-PowerBI
 
-# Installer les dépendances
-pip install -r requirements.txt
+# 2. Double-cliquer sur install.bat
+# ou en ligne de commande:
+install.bat
 
-# Configurer l'API Bexio
+# 3. Configurer (copiez et éditez .env)
+copy .env.example .env
+notepad .env
+
+# 4. Tester
+run_test.bat
+
+# 5. Extraire
+run_extraction.bat
+```
+
+**Linux / Mac:**
+```bash
+# 1. Télécharger le projet
+git clone <url-du-repo>
+cd BSCO-Dashboard-PowerBI
+
+# 2. Installer
+bash install.sh
+
+# 3. Configurer
 cp .env.example .env
-# Éditez .env et ajoutez votre token API
+nano .env
+
+# 4. Tester
+./run_test.sh
+
+# 5. Extraire
+./run_extraction.sh
 ```
 
-### 2. Configuration
+### 🎮 Menu Interactif
 
-Éditez le fichier `.env`:
+Pour encore plus de simplicité, utilisez le menu:
 
-```env
-BEXIO_API_TOKEN=votre_token_api_ici
-BEXIO_ENDPOINTS=contacts,invoices,quotes,projects
-EXTRACTION_DAYS=365
+```cmd
+menu.bat      # Windows
+./menu.sh     # Linux/Mac
 ```
 
-### 3. Extraction des données
+### 🧪 Mode Démonstration (Sans API)
+
+Testez sans API Bexio avec des données fictives:
 
 ```bash
-python scripts/run_pipeline.py
+python scripts/generate_demo_data.py
+python scripts/data_transformer.py
 ```
 
-### 4. Importer dans Power BI
+### Importer dans Power BI
 
 1. Ouvrez Power BI Desktop
 2. **Obtenir des données** → **Excel**
@@ -84,7 +114,9 @@ BSCO-Dashboard-PowerBI/
 ├── scripts/
 │   ├── bexio_extractor.py      # Extraction API Bexio
 │   ├── data_transformer.py     # Transformation des données
-│   └── run_pipeline.py         # Pipeline complet
+│   ├── run_pipeline.py         # Pipeline complet
+│   ├── test_connection.py      # Test de connexion API (NOUVEAU)
+│   └── generate_demo_data.py   # Génération données démo (NOUVEAU)
 ├── data/
 │   └── *.xlsx                  # Fichiers générés (ignorés par git)
 ├── powerbi/
@@ -93,9 +125,15 @@ BSCO-Dashboard-PowerBI/
 ├── docs/
 │   ├── GUIDE_INSTALLATION.md   # Guide complet d'installation
 │   ├── GUIDE_DASHBOARDS.md     # Templates de dashboards
-│   └── API_REFERENCE.md        # Référence API Bexio
+│   ├── API_REFERENCE.md        # Référence API Bexio
+│   └── INSTALLATION_LOCALE.md  # Guide installation locale (NOUVEAU)
+├── install.bat / install.sh    # Installation automatique (NOUVEAU)
+├── menu.bat / menu.sh          # Menu interactif (NOUVEAU)
+├── run_test.bat / .sh          # Test rapide connexion (NOUVEAU)
+├── run_extraction.bat / .sh    # Extraction rapide (NOUVEAU)
 ├── .env.example                # Template de configuration
 ├── requirements.txt            # Dépendances Python
+├── QUICKSTART.md               # Guide démarrage rapide
 └── README.md                   # Ce fichier
 ```
 
@@ -105,10 +143,13 @@ BSCO-Dashboard-PowerBI/
 
 | Document | Description |
 |----------|-------------|
+| **[QUICKSTART.md](QUICKSTART.md)** | ⚡ Démarrage ultra-rapide (10 min) |
+| **[Installation Locale](docs/INSTALLATION_LOCALE.md)** | 🖥️ Installation sur PC (NOUVEAU) |
 | [Guide d'Installation](docs/GUIDE_INSTALLATION.md) | Installation pas à pas et configuration |
 | [Guide des Dashboards](docs/GUIDE_DASHBOARDS.md) | Templates et bonnes pratiques |
 | [Requêtes Power Query](powerbi/PowerQuery_Examples.m) | Exemples de requêtes M |
 | [Mesures DAX](powerbi/DAX_Measures.dax) | KPIs et calculs avancés |
+| [API Reference](docs/API_REFERENCE.md) | Documentation API Bexio |
 
 ---
 
