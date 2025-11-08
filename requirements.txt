@@ -1,5 +1,11 @@
+# Dépendances principales
 requests==2.31.0
 pandas==2.1.4
 openpyxl==3.1.2
 python-dotenv==1.0.0
 xlsxwriter==3.1.9
+
+# Dépendances optionnelles (export avancé)
+# Décommentez si vous utilisez l'export SQL ou Parquet
+# sqlalchemy==2.0.23
+# pyarrow==14.0.1
