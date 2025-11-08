@@ -1,0 +1,356 @@
+// ============================================================================
+// MESURES DAX POUR DASHBOARD BEXIO
+// ============================================================================
+// Ces mesures DAX peuvent être utilisées dans Power BI pour créer des
+// indicateurs de performance (KPIs) et des calculs avancés
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// MESURES DE BASE - CHIFFRE D'AFFAIRES
+// ----------------------------------------------------------------------------
+
+// Chiffre d'affaires total
+Total Revenue = SUM(Invoices[Total])
+
+// Chiffre d'affaires de l'année en cours
+Revenue YTD =
+TOTALYTD(
+    SUM(Invoices[Total]),
+    Calendar[Date]
+)
+
+// Chiffre d'affaires du mois précédent
+Revenue Previous Month =
+CALCULATE(
+    SUM(Invoices[Total]),
+    PREVIOUSMONTH(Calendar[Date])
+)
+
+// Croissance du chiffre d'affaires (%)
+Revenue Growth % =
+VAR CurrentRevenue = SUM(Invoices[Total])
+VAR PreviousRevenue = CALCULATE(
+    SUM(Invoices[Total]),
+    PREVIOUSMONTH(Calendar[Date])
+)
+RETURN
+IF(
+    NOT(ISBLANK(PreviousRevenue)),
+    DIVIDE(CurrentRevenue - PreviousRevenue, PreviousRevenue, 0),
+    BLANK()
+)
+
+// Chiffre d'affaires moyen par mois
+Avg Revenue Per Month =
+AVERAGEX(
+    VALUES(Calendar[YearMonth]),
+    CALCULATE(SUM(Invoices[Total]))
+)
+
+
+// ----------------------------------------------------------------------------
+// MESURES - FACTURES
+// ----------------------------------------------------------------------------
+
+// Nombre de factures
+Invoice Count = COUNTROWS(Invoices)
+
+// Valeur moyenne d'une facture
+Average Invoice Value =
+DIVIDE(
+    SUM(Invoices[Total]),
+    COUNTROWS(Invoices),
+    0
+)
+
+// Factures en retard
+Overdue Invoices =
+CALCULATE(
+    COUNTROWS(Invoices),
+    Invoices[DaysOverdue] > 0
+)
+
+// Montant des factures en retard
+Overdue Amount =
+CALCULATE(
+    SUM(Invoices[Total]),
+    Invoices[DaysOverdue] > 0
+)
+
+// Taux de factures en retard (%)
+Overdue Rate % =
+DIVIDE(
+    [Overdue Invoices],
+    [Invoice Count],
+    0
+)
+
+
+// ----------------------------------------------------------------------------
+// MESURES - CLIENTS
+// ----------------------------------------------------------------------------
+
+// Nombre de clients
+Total Customers = DISTINCTCOUNT(Contacts[ContactID])
+
+// Nombre de clients actifs (avec factures)
+Active Customers =
+CALCULATE(
+    DISTINCTCOUNT(Invoices[ContactID])
+)
+
+// Chiffre d'affaires moyen par client
+Revenue Per Customer =
+DIVIDE(
+    [Total Revenue],
+    [Active Customers],
+    0
+)
+
+// Top 10% des clients par CA
+Top 10% Customers Revenue =
+VAR TotalCustomers = [Active Customers]
+VAR TopN = CEILING(TotalCustomers * 0.1, 1)
+VAR TopCustomers =
+    TOPN(
+        TopN,
+        VALUES(Invoices[ContactID]),
+        [Total Revenue],
+        DESC
+    )
+RETURN
+CALCULATE(
+    [Total Revenue],
+    TopCustomers
+)
+
+// Part du CA des 20% meilleurs clients (Principe de Pareto)
+Top 20% Revenue Share =
+VAR TotalCustomers = [Active Customers]
+VAR TopN = CEILING(TotalCustomers * 0.2, 1)
+VAR TopRevenue =
+    SUMX(
+        TOPN(
+            TopN,
+            VALUES(Invoices[ContactID]),
+            [Total Revenue],
+            DESC
+        ),
+        [Total Revenue]
+    )
+RETURN
+DIVIDE(TopRevenue, [Total Revenue], 0)
+
+
+// ----------------------------------------------------------------------------
+// MESURES - DEVIS
+// ----------------------------------------------------------------------------
+
+// Nombre de devis
+Quote Count = COUNTROWS(Quotes)
+
+// Valeur totale des devis
+Total Quote Value = SUM(Quotes[Total])
+
+// Taux de conversion devis → facture
+Conversion Rate % =
+VAR QuotesConverted =
+    CALCULATE(
+        COUNTROWS(Quotes),
+        Quotes[StatusID] = 4  // Ajustez selon votre code de statut "Accepté"
+    )
+RETURN
+DIVIDE(QuotesConverted, [Quote Count], 0)
+
+// Valeur moyenne d'un devis
+Average Quote Value =
+DIVIDE(
+    SUM(Quotes[Total]),
+    COUNTROWS(Quotes),
+    0
+)
+
+
+// ----------------------------------------------------------------------------
+// MESURES - PROJETS
+// ----------------------------------------------------------------------------
+
+// Nombre de projets actifs
+Active Projects =
+CALCULATE(
+    COUNTROWS(Projects),
+    Projects[StateID] = 1  // Ajustez selon votre code de statut "Actif"
+)
+
+// Durée moyenne des projets (jours)
+Average Project Duration =
+AVERAGE(Projects[ProjectDurationDays])
+
+// Chiffre d'affaires par projet
+Revenue Per Project =
+DIVIDE(
+    [Total Revenue],
+    [Active Projects],
+    0
+)
+
+
+// ----------------------------------------------------------------------------
+// MESURES - TEMPS DE TRAVAIL
+// ----------------------------------------------------------------------------
+
+// Heures totales facturables
+Total Billable Hours = SUM(Timesheets[DurationHours])
+
+// Heures non facturables
+Non Billable Hours =
+CALCULATE(
+    SUM(Timesheets[DurationHours]),
+    Timesheets[AllowableBill] = 0
+)
+
+// Taux d'utilisation (%)
+Utilization Rate % =
+DIVIDE(
+    [Total Billable Hours] - [Non Billable Hours],
+    [Total Billable Hours],
+    0
+)
+
+// Taux horaire moyen
+Average Hourly Rate =
+VAR TotalRevenue = [Total Revenue]
+VAR TotalHours = [Total Billable Hours]
+RETURN
+DIVIDE(TotalRevenue, TotalHours, 0)
+
+
+// ----------------------------------------------------------------------------
+// MESURES - TENDANCES ET PRÉVISIONS
+// ----------------------------------------------------------------------------
+
+// Chiffre d'affaires même période année précédente
+Revenue Same Period Last Year =
+CALCULATE(
+    [Total Revenue],
+    SAMEPERIODLASTYEAR(Calendar[Date])
+)
+
+// Croissance annuelle (%)
+YoY Growth % =
+VAR CurrentYear = [Total Revenue]
+VAR LastYear = [Revenue Same Period Last Year]
+RETURN
+IF(
+    NOT(ISBLANK(LastYear)),
+    DIVIDE(CurrentYear - LastYear, LastYear, 0),
+    BLANK()
+)
+
+// Moyenne mobile sur 3 mois
+Revenue 3M Moving Avg =
+AVERAGEX(
+    DATESINPERIOD(
+        Calendar[Date],
+        LASTDATE(Calendar[Date]),
+        -3,
+        MONTH
+    ),
+    [Total Revenue]
+)
+
+// Objectif mensuel (exemple: 50000 CHF)
+Monthly Target = 50000
+
+// Taux d'atteinte de l'objectif
+Target Achievement % =
+DIVIDE(
+    [Total Revenue],
+    [Monthly Target],
+    0
+)
+
+
+// ----------------------------------------------------------------------------
+// MESURES - ANALYSES AVANCÉES
+// ----------------------------------------------------------------------------
+
+// Panier moyen (nombre d'articles par facture)
+Avg Items Per Invoice =
+AVERAGEX(
+    Invoices,
+    CALCULATE(COUNTROWS(RELATEDTABLE(InvoiceItems)))
+)
+
+// Cycle de vente moyen (jours entre devis et facture)
+Average Sales Cycle Days =
+AVERAGEX(
+    FILTER(
+        Invoices,
+        NOT(ISBLANK(RELATED(Quotes[QuoteDate])))
+    ),
+    DATEDIFF(
+        RELATED(Quotes[QuoteDate]),
+        Invoices[InvoiceDate],
+        DAY
+    )
+)
+
+// Délai moyen de paiement (jours)
+Average Payment Delay Days =
+AVERAGE(Invoices[DaysOverdue])
+
+// Rang du client par CA
+Customer Revenue Rank =
+RANKX(
+    ALL(Contacts[ContactID]),
+    [Total Revenue],
+    ,
+    DESC,
+    DENSE
+)
+
+
+// ----------------------------------------------------------------------------
+// MESURES - FORMATAGE CONDITIONNEL
+// ----------------------------------------------------------------------------
+
+// Couleur selon performance (pour jauge)
+Revenue KPI Color =
+VAR Achievement = [Target Achievement %]
+RETURN
+SWITCH(
+    TRUE(),
+    Achievement >= 1, "Green",
+    Achievement >= 0.8, "Orange",
+    "Red"
+)
+
+// Indicateur de tendance
+Revenue Trend =
+VAR Growth = [Revenue Growth %]
+RETURN
+SWITCH(
+    TRUE(),
+    Growth > 0.05, "↑ En hausse",
+    Growth < -0.05, "↓ En baisse",
+    "→ Stable"
+)
+
+
+// ============================================================================
+// NOTES D'UTILISATION:
+// ============================================================================
+// 1. Créez ces mesures dans Power BI Desktop
+// 2. Ajustez les StatusID et StateID selon vos codes Bexio
+// 3. Modifiez les objectifs (Monthly Target) selon vos besoins
+// 4. Créez des relations entre les tables dans le modèle de données
+// 5. Utilisez ces mesures dans vos visuels et KPIs
+//
+// Relations recommandées:
+// - Invoices[ContactID] → Contacts[ContactID]
+// - Invoices[ProjectID] → Projects[ProjectID]
+// - Invoices[InvoiceDate] → Calendar[Date]
+// - Quotes[ContactID] → Contacts[ContactID]
+// - Timesheets[ProjectID] → Projects[ProjectID]
+// ============================================================================
