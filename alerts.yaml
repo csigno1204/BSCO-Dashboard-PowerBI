@@ -1,0 +1,157 @@
+# ============================================================================
+# Configuration des Alertes Intelligentes
+# ============================================================================
+# Définissez vos règles d'alertes métier ici
+
+alerts:
+  # Alerte sur CA mensuel faible
+  - name: "CA mensuel faible"
+    description: "Alerte si le CA mensuel est inférieur à l'objectif"
+    condition:
+      metric: monthly_revenue
+      operator: "<"
+      threshold: 50000
+    action:
+      - type: email
+        to: direction@example.com
+      - type: log
+        level: warning
+    priority: high
+    enabled: true
+
+  # Alerte sur factures en retard
+  - name: "Factures en retard critiques"
+    description: "Plus de 5 factures en retard de plus de 30 jours"
+    condition:
+      metric: overdue_invoices_30d
+      operator: ">"
+      threshold: 5
+    action:
+      - type: email
+        to: comptabilite@example.com
+      - type: slack
+        channel: "#finances"
+    priority: high
+    enabled: true
+
+  # Alerte croissance négative
+  - name: "Baisse du CA"
+    description: "CA en baisse de plus de 10% par rapport au mois précédent"
+    condition:
+      metric: revenue_growth_pct
+      operator: "<"
+      threshold: -10
+    action:
+      - type: email
+        to: direction@example.com,commercial@example.com
+      - type: teams
+        channel: "Finances"
+    priority: critical
+    enabled: true
+
+  # Alerte nouveau client
+  - name: "Nouveau client"
+    description: "Un nouveau client a été ajouté"
+    condition:
+      metric: new_customers
+      operator: ">"
+      threshold: 0
+    action:
+      - type: email
+        to: commercial@example.com
+      - type: slack
+        channel: "#commercial"
+    priority: low
+    enabled: true
+
+  # Alerte client perdu
+  - name: "Client inactif"
+    description: "Client sans achat depuis 90 jours"
+    condition:
+      metric: inactive_customers_90d
+      operator: ">"
+      threshold: 0
+    action:
+      - type: email
+        to: commercial@example.com
+    priority: medium
+    enabled: false
+
+  # Alerte objectif atteint
+  - name: "Objectif atteint"
+    description: "Objectif trimestriel atteint à 100%"
+    condition:
+      metric: quarterly_target_pct
+      operator: ">="
+      threshold: 100
+    action:
+      - type: email
+        to: direction@example.com,equipe@example.com
+      - type: slack
+        channel: "#general"
+    priority: low
+    enabled: true
+
+  # Alerte taux de retard élevé
+  - name: "Taux de retard élevé"
+    description: "Plus de 20% des factures sont en retard"
+    condition:
+      metric: overdue_rate_pct
+      operator: ">"
+      threshold: 20
+    action:
+      - type: email
+        to: comptabilite@example.com
+    priority: high
+    enabled: true
+
+  # Alerte pic d'activité
+  - name: "Pic de factures"
+    description: "Plus de 50 factures émises ce mois"
+    condition:
+      metric: monthly_invoice_count
+      operator: ">"
+      threshold: 50
+    action:
+      - type: log
+        level: info
+    priority: low
+    enabled: false
+
+# ============================================================================
+# Configuration des canaux de notification
+# ============================================================================
+
+notification_channels:
+  email:
+    enabled: true
+    smtp_server: ${SMTP_SERVER}
+    smtp_port: ${SMTP_PORT}
+    from: ${SMTP_USER}
+
+  slack:
+    enabled: false
+    webhook_url: ${SLACK_WEBHOOK_URL}
+    # Obtenez votre webhook: https://api.slack.com/messaging/webhooks
+
+  teams:
+    enabled: false
+    webhook_url: ${TEAMS_WEBHOOK_URL}
+    # Obtenez votre webhook dans Teams → Connecteurs → Webhook entrant
+
+# ============================================================================
+# Paramètres globaux
+# ============================================================================
+
+settings:
+  # Vérifier les alertes à chaque extraction
+  check_on_extraction: true
+
+  # Ne pas envoyer la même alerte plus d'une fois par jour
+  cooldown_hours: 24
+
+  # Inclure les données dans les notifications
+  include_data: true
+
+  # Langue des notifications
+  language: fr
