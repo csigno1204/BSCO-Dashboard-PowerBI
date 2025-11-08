@@ -1,0 +1,152 @@
+name: 🏗️ Build Windows Installer
+
+on:
+  push:
+    tags:
+      - 'v*'  # Déclenché sur les tags v1.0.0, v1.1.0, etc.
+  workflow_dispatch:  # Permet de lancer manuellement
+
+jobs:
+  build-windows-installer:
+    name: Build .exe Installer
+    runs-on: windows-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: 🔨 Build executable with PyInstaller
+        run: |
+          pyinstaller --clean installer/BexioDashboard.spec
+
+      - name: 📂 List dist directory
+        run: |
+          dir dist\BexioDashboard
+          echo "Executable created successfully!"
+
+      - name: 🧪 Test executable
+        run: |
+          # Test que l'exe existe
+          if (Test-Path "dist\BexioDashboard\BexioDashboard.exe") {
+            Write-Host "✅ BexioDashboard.exe created successfully"
+            $size = (Get-Item "dist\BexioDashboard\BexioDashboard.exe").Length / 1MB
+            Write-Host "📊 Size: $([math]::Round($size, 2)) MB"
+          } else {
+            Write-Error "❌ BexioDashboard.exe not found"
+            exit 1
+          }
+
+      - name: 📥 Download Inno Setup
+        run: |
+          # Télécharger Inno Setup
+          Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "innosetup.exe"
+
+          # Installer Inno Setup silencieusement
+          Start-Process -FilePath "innosetup.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-" -Wait
+
+      - name: 🏗️ Build installer with Inno Setup
+        run: |
+          # Chemin d'installation par défaut d'Inno Setup
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+
+          if (Test-Path $iscc) {
+            & $iscc "installer\BexioDashboard_Setup.iss"
+          } else {
+            Write-Error "❌ Inno Setup Compiler not found at $iscc"
+            exit 1
+          }
+
+      - name: 📦 Verify installer created
+        run: |
+          if (Test-Path "dist\installer\BexioDashboard_Setup_*.exe") {
+            $installer = Get-Item "dist\installer\BexioDashboard_Setup_*.exe"
+            Write-Host "✅ Installer created: $($installer.Name)"
+            $size = $installer.Length / 1MB
+            Write-Host "📊 Size: $([math]::Round($size, 2)) MB"
+          } else {
+            Write-Error "❌ Installer not found"
+            exit 1
+          }
+
+      - name: 📤 Upload executable as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BexioDashboard-Portable
+          path: dist/BexioDashboard/
+          retention-days: 30
+
+      - name: 📤 Upload installer as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BexioDashboard-Installer
+          path: dist/installer/*.exe
+          retention-days: 90
+
+      - name: 🎉 Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/installer/*.exe
+          body: |
+            ## 🚀 Dashboard Bexio → Power BI - ${{ github.ref_name }}
+
+            ### 📥 Installation
+
+            Téléchargez `BexioDashboard_Setup_v*.exe` et double-cliquez pour installer.
+
+            ### ✨ Nouveautés
+
+            Voir [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+
+            ### 📚 Documentation
+
+            - [Guide d'installation](https://github.com/${{ github.repository }}/blob/main/docs/INSTALLATION.md)
+            - [Guide d'utilisation](https://github.com/${{ github.repository }}/blob/main/docs/USAGE.md)
+            - [Validation des données](https://github.com/${{ github.repository }}/blob/main/docs/VALIDATION_DONNEES.md)
+
+            ### 💾 Fichiers
+
+            - **BexioDashboard_Setup_v*.exe** : Installeur Windows complet (~50-100 MB)
+            - Aucune dépendance requise (Python inclus)
+            - Installation en 1 clic
+
+            ### 🐛 Problèmes ?
+
+            Ouvrez une [issue](https://github.com/${{ github.repository }}/issues)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ✅ Build Summary
+        run: |
+          Write-Host ""
+          Write-Host "========================================" -ForegroundColor Green
+          Write-Host "   ✅ BUILD SUCCESSFUL!" -ForegroundColor Green
+          Write-Host "========================================" -ForegroundColor Green
+          Write-Host ""
+          Write-Host "📦 Artifacts créés:" -ForegroundColor Cyan
+          Write-Host "  - Application portable: dist\BexioDashboard\"
+          Write-Host "  - Installeur: dist\installer\*.exe"
+          Write-Host ""
+
+          if ("${{ github.ref }}" -like "refs/tags/*") {
+            Write-Host "🎉 Release GitHub créée automatiquement!" -ForegroundColor Green
+            Write-Host "   Visitez: https://github.com/${{ github.repository }}/releases"
+          } else {
+            Write-Host "💡 Pour créer une release:" -ForegroundColor Yellow
+            Write-Host "   git tag v1.0.0"
+            Write-Host "   git push origin v1.0.0"
+          }
+          Write-Host ""
