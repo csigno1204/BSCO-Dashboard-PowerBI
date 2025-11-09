@@ -3,7 +3,7 @@ Interface Graphique pour Dashboard Bexio → Power BI
 Application desktop complète avec Tkinter
 """
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox
+from tkinter import ttk, scrolledtext, messagebox, filedialog
 import threading
 import os
 import sys
@@ -137,6 +137,7 @@ class BexioDashboardGUI:
             ("🧙 Configuration", self.run_wizard, "Assistant de configuration guidée"),
             ("🧪 Test Connexion", self.test_connection, "Tester la connexion API Bexio"),
             ("▶️ Extraction", self.run_extraction, "Extraire les données depuis Bexio"),
+            ("🔄 Comparer Données", self.compare_data, "Comparer deux extractions"),
             ("📊 Rapport PDF", self.generate_report, "Générer un rapport exécutif"),
             ("🩺 Diagnostic", self.run_health_check, "Vérifier la santé du système"),
             ("🌐 Dashboard Web", self.open_web_dashboard, "Ouvrir le dashboard web"),
@@ -278,6 +279,109 @@ class BexioDashboardGUI:
         import webbrowser
         webbrowser.open('http://localhost:5000')
         self.log("💡 Si le serveur n'est pas démarré, lancez: python scripts/web_dashboard.py")
+
+    def compare_data(self):
+        """Compare deux fichiers de données"""
+        self.log("🔄 Lancement du comparateur de données...")
+
+        # Ouvrir dialogue pour sélectionner l'ancien fichier
+        old_file = filedialog.askopenfilename(
+            title="Sélectionnez l'ancienne extraction",
+            initialdir="data",
+            filetypes=[("Fichiers Excel", "*.xlsx"), ("Tous les fichiers", "*.*")]
+        )
+
+        if not old_file:
+            self.log("⚠️ Sélection annulée")
+            return
+
+        self.log(f"📁 Ancien fichier: {os.path.basename(old_file)}")
+
+        # Ouvrir dialogue pour sélectionner le nouveau fichier
+        new_file = filedialog.askopenfilename(
+            title="Sélectionnez la nouvelle extraction",
+            initialdir="data",
+            filetypes=[("Fichiers Excel", "*.xlsx"), ("Tous les fichiers", "*.*")]
+        )
+
+        if not new_file:
+            self.log("⚠️ Sélection annulée")
+            return
+
+        self.log(f"📁 Nouveau fichier: {os.path.basename(new_file)}")
+
+        # Lancer la comparaison en async
+        def run_comparison():
+            self.log("⏳ Comparaison en cours...")
+            try:
+                # Importer le comparateur
+                sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
+                from data_comparator import DataComparator
+
+                # Créer et exécuter
+                comparator = DataComparator()
+                results = comparator.compare_files(old_file, new_file)
+
+                # Afficher résumé dans les logs
+                self.log("\n" + "="*50)
+                self.log("📊 RÉSUMÉ DE LA COMPARAISON")
+                self.log("="*50)
+
+                # Métriques business
+                if 'business_metrics' in results:
+                    bm = results['business_metrics']
+
+                    if bm.get('revenue_change'):
+                        rc = bm['revenue_change']
+                        symbol = '↑' if rc['change'] >= 0 else '↓'
+                        self.log(f"💰 CA: {symbol} {rc['change']:,.0f} CHF ({rc['change_percent']:+.1f}%)")
+
+                    if bm.get('new_clients_count', 0) > 0:
+                        self.log(f"👥 Nouveaux clients: {bm['new_clients_count']}")
+
+                    if bm.get('invoices_paid', 0) > 0:
+                        self.log(f"✅ Factures payées: {bm['invoices_paid']}")
+
+                # Par table
+                total_changes = 0
+                for table_name, diff in results.get('tables', {}).items():
+                    summary = diff['summary']
+                    changes = summary['new_count'] + summary['deleted_count'] + summary['modified_count']
+                    total_changes += changes
+
+                    if changes > 0:
+                        self.log(f"\n📋 {table_name.capitalize()}:")
+                        self.log(f"   🆕 {summary['new_count']} nouveaux")
+                        self.log(f"   🗑️ {summary['deleted_count']} supprimés")
+                        self.log(f"   ✏️ {summary['modified_count']} modifiés")
+
+                self.log(f"\n{'='*50}")
+                self.log(f"✅ Total: {total_changes} changement(s) détecté(s)\n")
+
+                # Générer les rapports
+                html_file = comparator.generate_html_report()
+                json_file = comparator.export_json()
+
+                self.log(f"📄 Rapport HTML: {html_file}")
+                self.log(f"📄 Export JSON: {json_file}")
+
+                # Demander si on veut ouvrir le rapport
+                if messagebox.askyesno("Rapport Généré",
+                                      f"{total_changes} changement(s) détecté(s)!\n\n"
+                                      "Voulez-vous ouvrir le rapport HTML ?"):
+                    import webbrowser
+                    webbrowser.open('file://' + os.path.abspath(html_file))
+                    self.log("🌐 Rapport ouvert dans le navigateur")
+
+            except Exception as e:
+                self.log(f"❌ Erreur lors de la comparaison: {str(e)}")
+                import traceback
+                self.log(f"Détails: {traceback.format_exc()[:500]}")
+                messagebox.showerror("Erreur", f"Erreur lors de la comparaison:\n{str(e)}")
+
+        # Lancer dans un thread
+        thread = threading.Thread(target=run_comparison, daemon=True)
+        thread.start()
 
 def main():
     """Fonction principale"""
