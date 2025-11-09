@@ -81,6 +81,7 @@ Source: "..\scripts\*"; DestDir: "{app}\scripts"; Flags: ignoreversion recursesu
 Source: "..\docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README_INSTALLATION.txt"; DestDir: "{app}"; Flags: ignoreversion isreadme
+Source: "..\IMPORTANT_SECURITE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion
 
@@ -109,6 +110,7 @@ Name: "{app}\temp"; Permissions: users-full
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{group}\Configuration"; Filename: "{app}\{#MyAppExeName}"; Parameters: "--setup"
 Name: "{group}\📖 Lisez-moi"; Filename: "{app}\README_INSTALLATION.txt"
+Name: "{group}\⚠️ Sécurité et Antivirus"; Filename: "{app}\IMPORTANT_SECURITE.txt"
 Name: "{group}\Documentation"; Filename: "{app}\docs\README.md"
 Name: "{group}\Guide d'Installation Utilisateur"; Filename: "{app}\docs\INSTALLATION_UTILISATEUR.md"
 Name: "{group}\Guide d'Utilisation"; Filename: "{app}\docs\USAGE.md"
