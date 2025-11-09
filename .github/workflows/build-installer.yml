@@ -48,13 +48,18 @@ jobs:
             exit 1
           }
 
-      - name: 📥 Download Inno Setup
+      - name: 📥 Install Inno Setup via Chocolatey
         run: |
-          # Télécharger Inno Setup
-          Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "innosetup.exe"
+          # Installer Inno Setup avec Chocolatey (pré-installé sur GitHub Actions)
+          choco install innosetup -y
 
-          # Installer Inno Setup silencieusement
-          Start-Process -FilePath "innosetup.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-" -Wait
+          # Vérifier l'installation
+          if (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe") {
+            Write-Host "✅ Inno Setup installed successfully"
+          } else {
+            Write-Error "❌ Inno Setup installation failed"
+            exit 1
+          }
 
       - name: 🏗️ Build installer with Inno Setup
         run: |
