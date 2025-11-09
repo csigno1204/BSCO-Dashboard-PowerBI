@@ -82,6 +82,7 @@ Source: "..\docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs 
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README_INSTALLATION.txt"; DestDir: "{app}"; Flags: ignoreversion isreadme
 Source: "..\IMPORTANT_SECURITE.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\INSTALLATION_CERTIFICAT.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion
 

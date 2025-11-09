@@ -1,0 +1,13 @@
+# Ignorer TOUS les certificats
+*.pfx
+*.cer
+*.p12
+*.pem
+*.key
+
+# Ignorer les fichiers d'information (contiennent le mot de passe)
+CERTIFICATE_INFO.txt
+
+# Permettre le README
+!README.md
+!.gitignore
