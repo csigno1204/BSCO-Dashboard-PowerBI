@@ -65,6 +65,7 @@ italian.LaunchProgram=Avvia %1 dopo l'installazione
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 6.1; Check: not IsAdminInstallMode
 Name: "autostart"; Description: "Lancer au démarrage de Windows"; GroupDescription: "Options supplémentaires:"; Flags: unchecked
+Name: "installpowerbi"; Description: "Télécharger et installer Power BI Desktop (si non installé)"; GroupDescription: "Composants optionnels:"; Flags: unchecked; Check: not IsPowerBIInstalled
 
 [Files]
 ; Exécutable principal (généré par PyInstaller)
@@ -79,8 +80,9 @@ Source: "..\scripts\*"; DestDir: "{app}\scripts"; Flags: ignoreversion recursesu
 ; Documentation
 Source: "..\docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\README_INSTALLATION.txt"; DestDir: "{app}"; Flags: ignoreversion isreadme
 Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
+Source: "..\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion
 
 ; Configuration
 Source: "..\*.yaml"; DestDir: "{app}"; Flags: ignoreversion
@@ -106,8 +108,9 @@ Name: "{app}\temp"; Permissions: users-full
 ; Menu Démarrer
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{group}\Configuration"; Filename: "{app}\{#MyAppExeName}"; Parameters: "--setup"
+Name: "{group}\📖 Lisez-moi"; Filename: "{app}\README_INSTALLATION.txt"
 Name: "{group}\Documentation"; Filename: "{app}\docs\README.md"
-Name: "{group}\Guide d'Installation"; Filename: "{app}\docs\INSTALLATION.md"
+Name: "{group}\Guide d'Installation Utilisateur"; Filename: "{app}\docs\INSTALLATION_UTILISATEUR.md"
 Name: "{group}\Guide d'Utilisation"; Filename: "{app}\docs\USAGE.md"
 Name: "{group}\Validation des Données"; Filename: "{app}\docs\VALIDATION_DONNEES.md"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
@@ -136,6 +139,7 @@ Filename: "{app}\cleanup.bat"; Flags: runhidden; RunOnceId: "CleanupFiles"
 var
   PythonInstalledPage: TOutputMsgWizardPage;
   PythonInstalled: Boolean;
+  PowerBIDownloadPage: TDownloadWizardPage;
 
 // Vérifie si Python est installé (optionnel, car on utilise PyInstaller)
 function IsPythonInstalled: Boolean;
@@ -143,6 +147,77 @@ var
   ResultCode: Integer;
 begin
   Result := Exec('python', '--version', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+end;
+
+// Vérifie si Power BI Desktop est installé
+function IsPowerBIInstalled: Boolean;
+var
+  UninstallPath: String;
+begin
+  // Vérifier dans les clés de registre de désinstallation
+  Result := RegKeyExists(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{AC76BA86-7AD7-1036-7B44-AC0F074E4100}') or
+            RegKeyExists(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Power BI Desktop') or
+            RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Microsoft Power BI Desktop', 'InstallPath', UninstallPath) or
+            FileExists(ExpandConstant('{commonpf}\Microsoft Power BI Desktop\bin\PBIDesktop.exe')) or
+            FileExists(ExpandConstant('{commonpf64}\Microsoft Power BI Desktop\bin\PBIDesktop.exe'));
+end;
+
+// Télécharge et installe Power BI Desktop
+procedure DownloadAndInstallPowerBI;
+var
+  PowerBISetupPath: String;
+  ResultCode: Integer;
+  DownloadSuccess: Boolean;
+begin
+  if not WizardIsTaskSelected('installpowerbi') then
+    Exit;
+
+  if IsPowerBIInstalled then
+  begin
+    MsgBox('Power BI Desktop est déjà installé sur votre système.', mbInformation, MB_OK);
+    Exit;
+  end;
+
+  PowerBISetupPath := ExpandConstant('{tmp}\PBIDesktopSetup_x64.exe');
+
+  // Créer une page de téléchargement
+  PowerBIDownloadPage := CreateDownloadPage('Téléchargement de Power BI Desktop', 'Veuillez patienter...', nil);
+  PowerBIDownloadPage.Clear;
+  PowerBIDownloadPage.Add('https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup_x64.exe', 'PBIDesktopSetup_x64.exe', '');
+
+  PowerBIDownloadPage.Show;
+  try
+    DownloadSuccess := PowerBIDownloadPage.Download;
+  finally
+    PowerBIDownloadPage.Hide;
+  end;
+
+  if DownloadSuccess then
+  begin
+    if MsgBox('Power BI Desktop a été téléchargé.' + #13#10 + #13#10 +
+              'Voulez-vous l''installer maintenant ?' + #13#10 + #13#10 +
+              'Note: Cela peut prendre quelques minutes.',
+              mbConfirmation, MB_YESNO) = IDYES then
+    begin
+      if Exec(PowerBISetupPath, '-quiet ACCEPT_EULA=1', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
+      begin
+        if ResultCode = 0 then
+          MsgBox('Power BI Desktop a été installé avec succès !', mbInformation, MB_OK)
+        else
+          MsgBox('L''installation de Power BI Desktop a échoué (code: ' + IntToStr(ResultCode) + ').' + #13#10 +
+                 'Vous pouvez le télécharger manuellement depuis:' + #13#10 +
+                 'https://powerbi.microsoft.com/fr-fr/downloads/', mbError, MB_OK);
+      end
+      else
+        MsgBox('Impossible de lancer l''installeur de Power BI Desktop.', mbError, MB_OK);
+    end;
+  end
+  else
+  begin
+    MsgBox('Le téléchargement de Power BI Desktop a échoué.' + #13#10 + #13#10 +
+           'Vous pouvez le télécharger manuellement depuis:' + #13#10 +
+           'https://powerbi.microsoft.com/fr-fr/downloads/', mbError, MB_OK);
+  end;
 end;
 
 procedure InitializeWizard;
@@ -179,6 +254,9 @@ begin
              'Vous pourrez modifier les scripts si nécessaire.',
              mbInformation, MB_OK);
     end;
+
+    // Installer Power BI Desktop si demandé
+    DownloadAndInstallPowerBI;
   end;
 end;
 

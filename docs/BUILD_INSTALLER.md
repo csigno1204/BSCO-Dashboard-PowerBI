@@ -1,5 +1,17 @@
 # 🏗️ Guide de Construction de l'Installeur Windows (.exe)
 
+## ⚠️ **ATTENTION - GUIDE POUR DÉVELOPPEURS UNIQUEMENT** ⚠️
+
+**CE GUIDE EST RÉSERVÉ AUX DÉVELOPPEURS QUI VEULENT COMPILER L'APPLICATION.**
+
+**Si vous êtes un utilisateur final** qui veut simplement **INSTALLER** l'application :
+- ❌ N'utilisez PAS ce guide
+- ❌ N'exécutez PAS `build_installer.bat`
+- ✅ Utilisez le fichier **`BexioDashboard_Setup.exe`** fourni
+- ✅ Consultez le guide : `docs/INSTALLATION_UTILISATEUR.md`
+
+---
+
 Ce guide explique comment créer un installeur professionnel Windows (.exe) pour le Dashboard Bexio → Power BI.
 
 ---
@@ -19,7 +31,7 @@ L'installeur Windows permet de distribuer votre application comme un logiciel pr
 
 ## 🎯 Prérequis
 
-### Sur Votre Machine de Développement
+### Sur Votre Machine de Développement (Développeurs Uniquement)
 
 Vous aurez besoin de:
 
