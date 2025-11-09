@@ -1,0 +1,209 @@
+================================================================================
+  INSTALLATION DU CERTIFICAT - Dashboard Bexio Power BI
+================================================================================
+
+VERSION : 1.0.1 (Auto-signé)
+DATE    : Janvier 2025
+
+================================================================================
+  ⚠️ IMPORTANT - À LIRE AVANT INSTALLATION
+================================================================================
+
+Pour que l'application fonctionne sans avertissement de sécurité,
+vous devez d'abord installer le certificat BSCO Solutions.
+
+Cette étape est OBLIGATOIRE et ne prend que 2 minutes.
+
+================================================================================
+  📋 INSTRUCTIONS D'INSTALLATION DU CERTIFICAT
+================================================================================
+
+ÉTAPE 1 : OUVRIR LE CERTIFICAT
+------------------------------
+
+1. Localisez le fichier "BSCO_CodeSigning_SelfSigned.cer"
+   (fourni avec l'application)
+
+2. Double-cliquez sur ce fichier
+
+3. Une fenêtre "Certificat" s'ouvre
+
+
+ÉTAPE 2 : LANCER L'ASSISTANT D'INSTALLATION
+--------------------------------------------
+
+1. Dans la fenêtre "Certificat", cliquez sur :
+   → "Installer le certificat..."
+
+2. L'Assistant d'importation de certificat s'ouvre
+
+
+ÉTAPE 3 : CHOISIR L'EMPLACEMENT
+--------------------------------
+
+1. Emplacement du magasin :
+   → Sélectionnez "Utilisateur actuel"
+
+2. Cliquez sur "Suivant"
+
+
+ÉTAPE 4 : SÉLECTIONNER LE BON MAGASIN ⚠️ IMPORTANT
+---------------------------------------------------
+
+1. Sélectionnez :
+   → "Placer tous les certificats dans le magasin suivant"
+
+2. Cliquez sur "Parcourir..."
+
+3. Dans la liste, choisissez :
+   → "Autorités de certification racines de confiance"
+
+   ⚠️  PAS "Autorités de certification intermédiaires" !
+   ⚠️  C'est "RACINES de confiance" !
+
+4. Cliquez sur "OK"
+
+5. Cliquez sur "Suivant"
+
+
+ÉTAPE 5 : VÉRIFIER LE RÉCAPITULATIF
+------------------------------------
+
+Vérifiez que l'écran affiche :
+
+   Magasin de certificats :
+   → Autorités de certification racines de confiance
+
+   Contenu : 1 certificat(s)
+
+Si correct, cliquez sur "Terminer"
+
+
+ÉTAPE 6 : ACCEPTER L'AVERTISSEMENT DE SÉCURITÉ ⚠️ IMPORTANT
+------------------------------------------------------------
+
+Windows affiche un avertissement :
+
+   "Avertissement de sécurité
+
+   Voulez-vous installer ce certificat ?
+
+   Émetteur : BSCO Solutions
+   Objet    : BSCO Solutions"
+
+→ Cliquez sur "OUI"
+
+C'est normal ! Ce certificat a été créé par BSCO Solutions
+pour signer l'application Dashboard Bexio Power BI.
+
+
+ÉTAPE 7 : CONFIRMATION
+----------------------
+
+Vous devriez voir :
+
+   "L'importation a réussi."
+
+✅ Le certificat est maintenant installé !
+
+================================================================================
+  🚀 INSTALLER L'APPLICATION
+================================================================================
+
+Maintenant que le certificat est installé, vous pouvez installer l'application :
+
+1. Double-cliquez sur "BexioDashboard_Setup.exe"
+
+2. Windows SmartScreen peut toujours apparaître :
+   → Cliquez sur "Informations complémentaires"
+   → Cliquez sur "Exécuter quand même"
+
+3. Suivez l'assistant d'installation normalement
+
+4. C'est terminé !
+
+================================================================================
+  🔍 VÉRIFICATION (OPTIONNEL)
+================================================================================
+
+Pour vérifier que la signature est valide :
+
+1. Clic droit sur "BexioDashboard_Setup.exe" → Propriétés
+
+2. Onglet "Signatures numériques"
+
+3. Vous devriez voir :
+   → Nom du signataire : BSCO Solutions
+   → Statut : Valide
+
+================================================================================
+  ⚠️ NOTES IMPORTANTES
+================================================================================
+
+ANTIVIRUS : Ce certificat auto-signé ne protège PAS contre les faux
+positifs antivirus. Si votre antivirus bloque l'application, consultez
+le fichier "IMPORTANT_SECURITE.txt" pour savoir comment ajouter une
+exclusion.
+
+SÉCURITÉ : Ce certificat a été créé spécifiquement pour cette application
+par BSCO Solutions. Il est sûr de l'installer. Un certificat
+professionnel avec validation par une autorité de certification sera
+disponible prochainement pour éliminer tous les avertissements.
+
+================================================================================
+  ❓ PROBLÈMES COURANTS
+================================================================================
+
+PROBLÈME : "Le certificat n'est pas approuvé"
+SOLUTION : Vérifiez que vous l'avez bien installé dans
+           "Autorités de certification RACINES de confiance"
+           Pas dans "Autorités de certification intermédiaires" !
+
+PROBLÈME : "L'antivirus bloque toujours l'exe"
+SOLUTION : Le certificat auto-signé ne protège pas contre les faux
+           positifs antivirus. Ajoutez une exclusion dans votre antivirus.
+           Voir : IMPORTANT_SECURITE.txt
+
+PROBLÈME : "La signature est invalide"
+SOLUTION : Assurez-vous d'avoir installé le certificat AVANT
+           de lancer l'installeur.
+
+================================================================================
+  🗑️ DÉSINSTALLER LE CERTIFICAT (SI NÉCESSAIRE)
+================================================================================
+
+Si vous souhaitez désinstaller le certificat plus tard :
+
+1. Appuyez sur Windows + R
+2. Tapez : certmgr.msc
+3. Appuyez sur Entrée
+4. Naviguez vers : Autorités de certification racines de confiance
+                    → Certificats
+5. Trouvez : BSCO Solutions
+6. Clic droit → Supprimer
+7. Confirmez
+
+Le certificat sera désinstallé.
+
+================================================================================
+  📞 BESOIN D'AIDE ?
+================================================================================
+
+Documentation complète après installation :
+C:\Program Files\Dashboard Bexio Power BI\docs\
+
+Guides disponibles :
+- INSTALLATION_UTILISATEUR.md - Installation complète
+- ANTIVIRUS_ET_SECURITE.md    - Problèmes antivirus
+- CERTIFICAT_AUTOSIGNE.md     - Ce certificat (détails techniques)
+- USAGE.md                    - Utilisation de l'application
+
+Support :
+https://github.com/csigno1204/BSCO-Dashboard-PowerBI/issues
+
+================================================================================
+
+© 2025 BSCO Solutions
+Dashboard Bexio → Power BI
+
+================================================================================
