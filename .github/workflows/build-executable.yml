@@ -1,0 +1,87 @@
+name: 🚀 Build Executable (Simplifié)
+
+on:
+  workflow_dispatch:  # Déclenchement manuel uniquement
+  push:
+    branches:
+      - main
+      - 'claude/**'
+
+jobs:
+  build-executable:
+    name: Build Windows .exe
+    runs-on: windows-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 🔨 Build with PyInstaller
+        run: |
+          pyinstaller --clean `
+            --name BexioDashboard `
+            --windowed `
+            --onedir `
+            --add-data "scripts;scripts" `
+            --add-data "docs;docs" `
+            --add-data "powerbi;powerbi" `
+            --add-data ".env.example;." `
+            --add-data "alerts.yaml;." `
+            --hidden-import=tkinter `
+            --hidden-import=tkinter.ttk `
+            --hidden-import=tkinter.scrolledtext `
+            --hidden-import=requests `
+            --hidden-import=pandas `
+            --hidden-import=openpyxl `
+            --hidden-import=xlsxwriter `
+            --hidden-import=yaml `
+            --hidden-import=dotenv `
+            scripts/gui_app.py
+
+      - name: 📂 List output
+        run: |
+          Write-Host "=== Contenu de dist/BexioDashboard/ ===" -ForegroundColor Cyan
+          Get-ChildItem -Path dist/BexioDashboard -Recurse -Depth 1 | Select-Object FullName
+          Write-Host ""
+          if (Test-Path "dist/BexioDashboard/BexioDashboard.exe") {
+            $size = (Get-Item "dist/BexioDashboard/BexioDashboard.exe").Length / 1MB
+            Write-Host "✅ Exécutable créé: $([math]::Round($size, 2)) MB" -ForegroundColor Green
+          } else {
+            Write-Error "❌ Exécutable non trouvé!"
+            exit 1
+          }
+
+      - name: 📦 Create ZIP archive
+        run: |
+          Compress-Archive -Path dist/BexioDashboard/* -DestinationPath BexioDashboard-Windows.zip
+          $size = (Get-Item "BexioDashboard-Windows.zip").Length / 1MB
+          Write-Host "📦 Archive créée: $([math]::Round($size, 2)) MB" -ForegroundColor Green
+
+      - name: 📤 Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: BexioDashboard-Windows-Portable
+          path: BexioDashboard-Windows.zip
+          retention-days: 90
+
+      - name: ✅ Success
+        run: |
+          Write-Host ""
+          Write-Host "========================================" -ForegroundColor Green
+          Write-Host "   ✅ BUILD RÉUSSI!" -ForegroundColor Green
+          Write-Host "========================================" -ForegroundColor Green
+          Write-Host ""
+          Write-Host "📥 Téléchargez l'artifact 'BexioDashboard-Windows-Portable'" -ForegroundColor Cyan
+          Write-Host "📂 Décompressez le ZIP" -ForegroundColor Cyan
+          Write-Host "🚀 Lancez BexioDashboard.exe" -ForegroundColor Cyan
+          Write-Host ""
