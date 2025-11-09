@@ -29,25 +29,82 @@ a = Analysis(
 
     # Modules Python cachés nécessaires
     hiddenimports=[
+        # Interface graphique Tkinter
         'tkinter',
         'tkinter.ttk',
         'tkinter.scrolledtext',
+        'tkinter.filedialog',
+        'tkinter.messagebox',
+        'tkinter.constants',
+
+        # Requêtes HTTP
         'requests',
+        'requests.adapters',
+        'requests.auth',
+        'requests.exceptions',
+        'urllib3',
+        'certifi',
+        'charset_normalizer',
+        'idna',
+
+        # Pandas et dépendances
         'pandas',
+        'pandas.core',
+        'pandas.io',
+        'pandas.io.excel',
+        'pandas.io.formats',
+        'numpy',
+        'numpy.core',
+        'numpy.core._multiarray_umath',
+        'pytz',
+        'dateutil',
+        'dateutil.parser',
+        'six',
+
+        # Excel
         'openpyxl',
+        'openpyxl.styles',
+        'openpyxl.cell',
+        'openpyxl.worksheet',
         'xlsxwriter',
+        'xlsxwriter.workbook',
+        'xlsxwriter.worksheet',
+        'et_xmlfile',
+
+        # Configuration
         'dotenv',
+        'python_dotenv',
         'yaml',
+        'PyYAML',
+
+        # Standard library (explicite pour sécurité)
         'json',
         'datetime',
         'threading',
         'webbrowser',
         'subprocess',
+        'os',
+        'sys',
+        'pathlib',
+        'shutil',
+        'glob',
+
+        # Email
         'smtplib',
         'email',
+        'email.mime',
+        'email.mime.text',
+        'email.mime.multipart',
+        'email.mime.base',
+
+        # Logging
         'logging',
+        'logging.handlers',
+
+        # Base de données
         'sqlite3',
-        # Dépendances pour futures extensions
+
+        # Dépendances optionnelles (futures extensions)
         'sqlalchemy',
         'pyarrow',
         'matplotlib',
@@ -89,6 +146,7 @@ a = Analysis(
 scripts_to_include = [
     'bexio_extractor.py',
     'data_transformer.py',
+    'data_comparator.py',  # ← NOUVEAU: Comparateur de données
     'run_pipeline.py',
     'setup_wizard.py',
     'test_connection.py',
@@ -117,6 +175,7 @@ docs_to_include = [
     'USAGE.md',
     'FEATURES.md',
     'VALIDATION_DONNEES.md',
+    'COMPARATEUR.md',  # ← NOUVEAU: Guide comparateur
     'FAQ.md',
     'ARCHITECTURE.md',
     'SCHEDULER.md',
@@ -125,6 +184,8 @@ docs_to_include = [
     'TROUBLESHOOTING.md',
     'ALERTS.md',
     'ROADMAP.md',
+    'BUILD_INSTALLER.md',
+    'COMPILATION_AUTOMATIQUE.md',
 ]
 
 for doc in docs_to_include:

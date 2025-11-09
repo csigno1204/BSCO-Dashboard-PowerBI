@@ -1,21 +1,87 @@
 # ============================================================================
 # Requirements - Dashboard Bexio Power BI
 # ============================================================================
+# Ce fichier contient TOUTES les dépendances nécessaires pour faire
+# fonctionner l'application, que ce soit en mode développement ou compilée.
+#
+# PyInstaller embarque automatiquement toutes ces dépendances dans le .exe
+# ============================================================================
 
-# Dépendances principales
+# ============================================================================
+# DÉPENDANCES PRINCIPALES (Nécessaires)
+# ============================================================================
+
+# Requêtes HTTP pour API Bexio
 requests>=2.31.0
+urllib3>=2.0.0
+certifi>=2023.7.22
+charset-normalizer>=3.2.0
+idna>=3.4
+
+# Manipulation de données
 pandas>=2.1.0
+numpy>=1.24.0
+python-dateutil>=2.8.2
+pytz>=2023.3
+six>=1.16.0
+
+# Export Excel
 openpyxl>=3.1.0
-python-dotenv>=1.0.0
+et-xmlfile>=1.1.0
 xlsxwriter>=3.1.0
+
+# Configuration
+python-dotenv>=1.0.0
+
+# YAML pour alertes
 PyYAML>=6.0
 
-# Pour PyInstaller (compilation .exe)
-pyinstaller>=6.0.0
+# ============================================================================
+# DÉPENDANCES POUR COMPILATION .EXE
+# ============================================================================
 
-# Dépendances optionnelles (export avancé)
-# Décommentez si vous utilisez l'export SQL ou Parquet
+# PyInstaller pour créer l'exécutable autonome
+pyinstaller>=6.0.0
+pyinstaller-hooks-contrib>=2024.0
+
+# altgraph (dépendance de PyInstaller)
+altgraph>=0.17
+
+# ============================================================================
+# DÉPENDANCES OPTIONNELLES (Recommandées)
+# ============================================================================
+
+# Export SQL (optionnel mais utile)
+# Décommentez si vous utilisez l'export vers base de données
 # sqlalchemy>=2.0.0
+
+# Export Parquet pour Big Data (optionnel)
+# Décommentez si vous gérez de gros volumes
 # pyarrow>=14.0.0
 
-# Note: tkinter est inclus avec Python (pas besoin d'installer)
+# Génération PDF (optionnel - pour rapports avancés)
+# Décommentez si vous voulez des PDF plus sophistiqués
+# reportlab>=4.0.0
+
+# Machine Learning (pour prévisions - futur)
+# scikit-learn>=1.3.0
+# prophet>=1.1.0
+
+# ============================================================================
+# NOTES IMPORTANTES
+# ============================================================================
+
+# ✅ tkinter: Inclus avec Python (pas besoin d'installer)
+# ✅ json, datetime, threading, os, sys: Standard library Python
+# ✅ sqlite3: Inclus avec Python
+
+# 💡 PyInstaller embarque automatiquement:
+#    - Python complet (3.8+)
+#    - Toutes les dépendances ci-dessus
+#    - Les DLL système nécessaires
+#    - Résultat: .exe autonome (~50-100 MB)
+
+# 🚀 Pour compiler l'exe:
+#    python build_installer.bat     (Windows)
+#    OU
+#    Utilisez GitHub Actions (cloud, automatique)
