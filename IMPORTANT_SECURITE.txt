@@ -1,0 +1,169 @@
+================================================================================
+  ⚠️ IMPORTANT - FAUX POSITIF ANTIVIRUS ⚠️
+  Dashboard Bexio → Power BI
+================================================================================
+
+VERSION : 1.0.1
+DATE    : Janvier 2025
+
+================================================================================
+  🚨 VOTRE ANTIVIRUS DÉTECTE UN TROJAN ?
+================================================================================
+
+C'est un FAUX POSITIF très courant avec les applications Python empaquetées.
+
+✅ CE LOGICIEL EST 100% SÉCURISÉ :
+
+- Code source entièrement visible et auditable sur :
+  https://github.com/csigno1204/BSCO-Dashboard-PowerBI
+
+- Compilation automatique sur serveurs Microsoft sécurisés
+  (GitHub Actions - Infrastructure cloud Microsoft Azure)
+
+- Aucun code malveillant, aucune connexion suspecte
+
+- Utilisé uniquement pour extraire des données depuis l'API Bexio
+  et les transformer pour Power BI
+
+================================================================================
+  ❓ POURQUOI CE FAUX POSITIF ?
+================================================================================
+
+L'application est créée avec "PyInstaller", un outil légitime pour
+empaqueter des applications Python.
+
+PyInstaller utilise des techniques (compression, chargement dynamique)
+qui RESSEMBLENT aux techniques utilisées par certains malwares.
+
+Résultat : Les antivirus détectent un comportement suspect alors que
+le code est parfaitement légitime.
+
+C'est un problème connu et documenté :
+https://github.com/pyinstaller/pyinstaller/issues/6754
+
+================================================================================
+  ✅ SOLUTION IMMÉDIATE
+================================================================================
+
+ÉTAPE 1 : RESTAURER LE FICHIER DEPUIS LA QUARANTAINE
+
+Si l'exe a été supprimé ou mis en quarantaine :
+
+1. Ouvrez votre antivirus
+2. Cherchez "Quarantaine" ou "Historique de protection"
+3. Trouvez "BexioDashboard.exe" ou "BexioDashboard_Setup.exe"
+4. Cliquez sur "Restaurer" ou "Autoriser"
+
+ÉTAPE 2 : AJOUTER UNE EXCLUSION PERMANENTE
+
+Pour que l'antivirus n'analyse plus ce logiciel :
+
+┌─────────────────────────────────────────────────────────┐
+│ WINDOWS DEFENDER                                        │
+└─────────────────────────────────────────────────────────┘
+
+1. Paramètres Windows → Sécurité Windows
+2. Protection contre les virus et menaces → Gérer les paramètres
+3. Exclusions → Ajouter ou supprimer des exclusions
+4. Ajouter une exclusion → Dossier
+5. Sélectionnez : C:\Program Files\Dashboard Bexio Power BI
+
+┌─────────────────────────────────────────────────────────┐
+│ AVAST / AVG                                             │
+└─────────────────────────────────────────────────────────┘
+
+1. Ouvrir Avast → Menu → Paramètres
+2. Général → Exceptions
+3. Ajouter une exception → Chemin du fichier
+4. Ajoutez : C:\Program Files\Dashboard Bexio Power BI
+
+┌─────────────────────────────────────────────────────────┐
+│ KASPERSKY                                               │
+└─────────────────────────────────────────────────────────┘
+
+1. Ouvrir Kaspersky → Paramètres
+2. Menaces et exclusions → Gérer les exclusions
+3. Ajouter → Parcourir
+4. Sélectionnez : C:\Program Files\Dashboard Bexio Power BI
+
+┌─────────────────────────────────────────────────────────┐
+│ NORTON 360                                              │
+└─────────────────────────────────────────────────────────┘
+
+1. Ouvrir Norton → Paramètres
+2. Antivirus → Analyses et risques
+3. Exclusions → Configurer
+4. Ajouter un dossier → C:\Program Files\Dashboard Bexio Power BI
+
+┌─────────────────────────────────────────────────────────┐
+│ BITDEFENDER                                             │
+└─────────────────────────────────────────────────────────┘
+
+1. Ouvrir Bitdefender → Protection
+2. Paramètres antivirus → Exceptions
+3. Ajouter une exception
+4. Sélectionnez : C:\Program Files\Dashboard Bexio Power BI
+
+┌─────────────────────────────────────────────────────────┐
+│ AUTRE ANTIVIRUS                                         │
+└─────────────────────────────────────────────────────────┘
+
+Cherchez "Exclusions", "Exceptions" ou "Liste blanche" dans
+les paramètres de votre antivirus et ajoutez le dossier
+d'installation.
+
+================================================================================
+  🔐 VERSION SIGNÉE NUMÉRIQUEMENT À VENIR
+================================================================================
+
+Une version avec SIGNATURE DE CODE NUMÉRIQUE sera disponible
+prochainement. Cette signature :
+
+✅ Éliminera définitivement les faux positifs
+✅ Affichera "Éditeur vérifié : BSCO Solutions" dans Windows
+✅ Sera reconnue par tous les antivirus
+
+La signature de code nécessite un certificat professionnel
+(~500 EUR/an) actuellement en cours de commande.
+
+================================================================================
+  📚 DOCUMENTATION COMPLÈTE
+================================================================================
+
+Pour plus d'informations sur la sécurité de cette application :
+
+📖 Guide complet : docs/ANTIVIRUS_ET_SECURITE.md
+📖 Code source : https://github.com/csigno1204/BSCO-Dashboard-PowerBI
+📖 Guide d'installation : docs/INSTALLATION_UTILISATEUR.md
+
+================================================================================
+  ❓ QUESTIONS / PROBLÈMES
+================================================================================
+
+Si vous avez des questions ou rencontrez des problèmes :
+
+🐛 Ouvrez une issue : https://github.com/csigno1204/BSCO-Dashboard-PowerBI/issues
+📧 Support : [Votre email de support]
+
+================================================================================
+  ✅ VÉRIFICATION VIRUSTO TAL
+================================================================================
+
+Vous pouvez vérifier vous-même la sécurité du fichier :
+
+1. Allez sur : https://www.virustotal.com
+2. Uploadez le fichier BexioDashboard_Setup.exe
+3. Consultez les résultats
+
+Note : Même sur VirusTotal, quelques antivirus peuvent signaler
+un faux positif (c'est normal avec PyInstaller). La majorité
+des 70+ antivirus confirmeront que le fichier est sain.
+
+================================================================================
+
+Merci de votre confiance !
+
+© 2025 BSCO Solutions
+Dashboard Bexio → Power BI
+
+================================================================================

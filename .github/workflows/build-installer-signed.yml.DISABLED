@@ -1,0 +1,235 @@
+name: 🔐 Build Windows Installer (Signed)
+
+# ⚠️ CE WORKFLOW EST DÉSACTIVÉ PAR DÉFAUT ⚠️
+# Pour l'activer :
+# 1. Obtenez un certificat de signature de code (DigiCert, Sectigo, etc.)
+# 2. Ajoutez les secrets GitHub : CODESIGN_CERTIFICATE, CODESIGN_PASSWORD
+# 3. Renommez ce fichier en .yml (retirez .DISABLED)
+
+on:
+  push:
+    tags:
+      - 'v*-signed'  # Déclenché sur les tags v1.0.0-signed, v1.1.0-signed, etc.
+  workflow_dispatch:  # Permet de lancer manuellement
+
+jobs:
+  build-windows-installer-signed:
+    name: Build Signed .exe Installer
+    runs-on: windows-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: 🔨 Build executable with PyInstaller
+        run: |
+          pyinstaller --clean installer/BexioDashboard.spec
+
+      - name: 📂 List dist directory
+        run: |
+          dir dist\BexioDashboard
+          echo "Executable created successfully!"
+
+      - name: 🔐 Decode and import code signing certificate
+        run: |
+          # Décoder le certificat depuis base64 (stocké dans GitHub Secrets)
+          $cert_bytes = [Convert]::FromBase64String("${{ secrets.CODESIGN_CERTIFICATE }}")
+          [IO.File]::WriteAllBytes("${{ github.workspace }}\certificate.pfx", $cert_bytes)
+
+          # Importer le certificat dans le store Windows
+          $password = ConvertTo-SecureString "${{ secrets.CODESIGN_PASSWORD }}" -AsPlainText -Force
+          Import-PfxCertificate -FilePath "${{ github.workspace }}\certificate.pfx" -CertStoreLocation Cert:\CurrentUser\My -Password $password
+
+          Write-Host "✅ Certificate imported successfully"
+
+      - name: 🔏 Sign executable with SignTool
+        run: |
+          # Chemin vers SignTool (inclus dans Windows SDK)
+          $signtool = "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe"
+
+          # Signer l'exécutable principal
+          & $signtool sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /a "dist\BexioDashboard\BexioDashboard.exe"
+
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✅ Executable signed successfully"
+          } else {
+            Write-Error "❌ Signing failed"
+            exit 1
+          }
+
+      - name: 🧪 Verify signature
+        run: |
+          $signtool = "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe"
+          & $signtool verify /pa /v "dist\BexioDashboard\BexioDashboard.exe"
+
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✅ Signature verified successfully"
+          } else {
+            Write-Error "❌ Signature verification failed"
+            exit 1
+          }
+
+      - name: 📥 Install Inno Setup via Chocolatey
+        run: |
+          choco install innosetup -y
+
+          if (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe") {
+            Write-Host "✅ Inno Setup installed successfully"
+          } else {
+            Write-Error "❌ Inno Setup installation failed"
+            exit 1
+          }
+
+      - name: 🏗️ Build installer with Inno Setup
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+
+          if (Test-Path $iscc) {
+            & $iscc "installer\BexioDashboard_Setup.iss"
+          } else {
+            Write-Error "❌ Inno Setup Compiler not found at $iscc"
+            exit 1
+          }
+
+      - name: 🔏 Sign installer with SignTool
+        run: |
+          $signtool = "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe"
+
+          # Signer l'installeur
+          & $signtool sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /a "dist\installer\BexioDashboard_Setup_*.exe"
+
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✅ Installer signed successfully"
+          } else {
+            Write-Error "❌ Installer signing failed"
+            exit 1
+          }
+
+      - name: 🧪 Verify installer signature
+        run: |
+          $signtool = "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe"
+          $installer = Get-Item "dist\installer\BexioDashboard_Setup_*.exe"
+
+          & $signtool verify /pa /v $installer.FullName
+
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✅ Installer signature verified successfully"
+          } else {
+            Write-Error "❌ Installer signature verification failed"
+            exit 1
+          }
+
+      - name: 🧹 Cleanup certificate
+        if: always()
+        run: |
+          # Supprimer le fichier certificat
+          if (Test-Path "${{ github.workspace }}\certificate.pfx") {
+            Remove-Item "${{ github.workspace }}\certificate.pfx" -Force
+          }
+
+          # Supprimer du store Windows
+          Get-ChildItem Cert:\CurrentUser\My | Where-Object { $_.Subject -like "*BSCO*" } | Remove-Item
+
+      - name: 📦 Verify installer created
+        run: |
+          if (Test-Path "dist\installer\BexioDashboard_Setup_*.exe") {
+            $installer = Get-Item "dist\installer\BexioDashboard_Setup_*.exe"
+            Write-Host "✅ Signed installer created: $($installer.Name)"
+            $size = $installer.Length / 1MB
+            Write-Host "📊 Size: $([math]::Round($size, 2)) MB"
+
+            # Vérifier la signature
+            $signature = Get-AuthenticodeSignature $installer.FullName
+            Write-Host "🔏 Signer: $($signature.SignerCertificate.Subject)"
+            Write-Host "🔏 Status: $($signature.Status)"
+          } else {
+            Write-Error "❌ Installer not found"
+            exit 1
+          }
+
+      - name: 📤 Upload signed installer as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BexioDashboard-Installer-Signed
+          path: dist/installer/*.exe
+          retention-days: 90
+
+      - name: 🎉 Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/installer/*.exe
+          body: |
+            ## 🔐 Dashboard Bexio → Power BI - ${{ github.ref_name }} (SIGNED)
+
+            ### ✅ Version Signée Numériquement
+
+            Cette version est **signée numériquement** avec un certificat de confiance.
+
+            **Avantages :**
+            - ✅ Aucun faux positif antivirus
+            - ✅ "Éditeur vérifié : BSCO Solutions" affiché dans Windows
+            - ✅ Installation sans avertissement SmartScreen
+
+            ### 📥 Installation
+
+            Téléchargez `BexioDashboard_Setup_v*.exe` et double-cliquez pour installer.
+
+            **Aucune exclusion antivirus nécessaire !**
+
+            ### ✨ Nouveautés
+
+            Voir [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+
+            ### 📚 Documentation
+
+            - [Guide d'installation](https://github.com/${{ github.repository }}/blob/main/docs/INSTALLATION_UTILISATEUR.md)
+            - [Guide d'utilisation](https://github.com/${{ github.repository }}/blob/main/docs/USAGE.md)
+
+            ### 💾 Fichiers
+
+            - **BexioDashboard_Setup_v*.exe** : Installeur Windows signé (~50-100 MB)
+            - Signature numérique valide
+            - Aucune dépendance requise (Python inclus)
+            - Installation en 1 clic
+
+            ### 🔐 Vérification de Signature
+
+            Vous pouvez vérifier la signature :
+            1. Clic droit sur l'exe → Propriétés
+            2. Onglet "Signatures numériques"
+            3. Vérifiez : "Nom du signataire : BSCO Solutions"
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ✅ Build Summary
+        run: |
+          Write-Host ""
+          Write-Host "========================================" -ForegroundColor Green
+          Write-Host "   ✅ SIGNED BUILD SUCCESSFUL!" -ForegroundColor Green
+          Write-Host "========================================" -ForegroundColor Green
+          Write-Host ""
+          Write-Host "🔐 Signed artifacts créés:" -ForegroundColor Cyan
+          Write-Host "  - Signed application: dist\BexioDashboard\BexioDashboard.exe"
+          Write-Host "  - Signed installer: dist\installer\*.exe"
+          Write-Host ""
+
+          if ("${{ github.ref }}" -like "refs/tags/*") {
+            Write-Host "🎉 Signed Release GitHub créée automatiquement!" -ForegroundColor Green
+            Write-Host "   Visitez: https://github.com/${{ github.repository }}/releases"
+          }
+          Write-Host ""
