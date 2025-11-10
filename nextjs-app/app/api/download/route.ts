@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
-
-// Get synced data from sync route
-// In production, this would come from a database or Redis
-let syncedData: any = null
+import { getSyncedData } from '@/lib/dataStore'
 
 export async function GET(request: NextRequest) {
   try {
-    // In a real app, you'd fetch this from a database
-    // For now, we'll need to pass it via request or use a shared store
+    // Get data from shared dataStore
+    const syncedData = getSyncedData()
 
-    // Mock data if no sync has been done
+    // Check if data exists
     if (!syncedData || !syncedData.contacts) {
-      // Return an error or empty file
       return NextResponse.json(
         { success: false, error: 'Aucune donnée à exporter. Veuillez d\'abord synchroniser.' },
         { status: 404 }
@@ -59,9 +55,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
-
-// Helper to set synced data (called from sync route)
-export function setSyncedData(data: any) {
-  syncedData = data
 }
