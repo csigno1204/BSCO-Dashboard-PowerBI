@@ -7,8 +7,10 @@ import { useState, useEffect } from 'react'
 const menuItems = [
   { icon: '🏠', label: 'Dashboard', href: '/' },
   { icon: '🔄', label: 'Synchronisation', href: '/sync' },
-  { icon: '📁', label: 'Historique', href: '/history' },
+  { icon: '📈', label: 'Analytics', href: '/analytics' },
   { icon: '📊', label: 'Statistiques', href: '/stats' },
+  { icon: '💼', label: 'Power BI', href: '/powerbi' },
+  { icon: '📁', label: 'Historique', href: '/history' },
   { icon: '⚙️', label: 'Configuration', href: '/config' },
 ]
 

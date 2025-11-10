@@ -15,7 +15,8 @@
     "react-dom": "^19.0.0",
     "axios": "^1.7.9",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
-    "date-fns": "^4.1.0"
+    "date-fns": "^4.1.0",
+    "recharts": "^2.15.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
