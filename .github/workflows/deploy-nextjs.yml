@@ -1,0 +1,43 @@
+name: ✅ Next.js Application
+
+on:
+  push:
+    branches:
+      - main
+      - 'claude/**'
+    paths:
+      - 'nextjs-app/**'
+  pull_request:
+    paths:
+      - 'nextjs-app/**'
+
+jobs:
+  build:
+    name: Build Next.js App
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: nextjs-app
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: nextjs-app/package-lock.json
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🔨 Build Next.js
+        run: npm run build
+
+      - name: ✅ Success
+        run: |
+          echo "✅ Next.js build successful!"
+          echo "🚀 Ready for Vercel deployment"
