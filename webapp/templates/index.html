@@ -7,34 +7,256 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="logo">
-                <h1>📊 Dashboard Bexio → Power BI</h1>
-                <p class="subtitle">Synchronisez vos données Bexio vers Power BI en un clic</p>
-            </div>
-            <div class="status-indicator" id="statusIndicator">
-                <span class="status-dot" id="statusDot"></span>
-                <span class="status-text" id="statusText">Non configuré</span>
-            </div>
-        </header>
+    <!-- Sidebar Menu -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>📊 Bexio Dashboard</h2>
+            <p class="version">v1.0</p>
+        </div>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Configuration Card -->
-            <div class="card" id="configCard">
-                <div class="card-header">
-                    <h2>⚙️ Configuration</h2>
+        <ul class="menu">
+            <li class="menu-item active" data-page="dashboard">
+                <span class="icon">🏠</span>
+                <span class="label">Dashboard</span>
+            </li>
+            <li class="menu-item" data-page="sync">
+                <span class="icon">🔄</span>
+                <span class="label">Synchronisation</span>
+            </li>
+            <li class="menu-item" data-page="history">
+                <span class="icon">📁</span>
+                <span class="label">Historique</span>
+            </li>
+            <li class="menu-item" data-page="stats">
+                <span class="icon">📊</span>
+                <span class="label">Statistiques</span>
+            </li>
+            <li class="menu-item" data-page="config">
+                <span class="icon">⚙️</span>
+                <span class="label">Configuration</span>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div class="status-badge" id="apiStatus">
+                <span class="status-dot"></span>
+                <span class="status-text">Non configuré</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page: Dashboard -->
+        <div class="page active" id="page-dashboard">
+            <div class="page-header">
+                <h1>Dashboard</h1>
+                <p class="subtitle">Bienvenue dans votre tableau de bord Bexio → Power BI</p>
+            </div>
+
+            <div class="cards-grid">
+                <div class="info-card">
+                    <div class="card-icon">🎯</div>
+                    <h3>Qu'est-ce que c'est ?</h3>
+                    <p>Une application qui synchronise automatiquement vos données Bexio (contacts, factures, projets) vers des fichiers Excel compatibles Power BI.</p>
                 </div>
-                <div class="card-body">
+
+                <div class="info-card">
+                    <div class="card-icon">⚡</div>
+                    <h3>Rapide et Simple</h3>
+                    <p>En un clic, extrayez toutes vos données Bexio et téléchargez-les au format Excel prêt pour Power BI Desktop.</p>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-icon">🔒</div>
+                    <h3>100% Sécurisé</h3>
+                    <p>Vos données restent privées. La clé API est stockée en mémoire uniquement. Aucune donnée n'est envoyée ailleurs.</p>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <h2>Actions Rapides</h2>
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="navigateTo('config')">
+                        <span class="btn-icon">⚙️</span>
+                        <span class="btn-text">Configurer l'API Bexio</span>
+                    </button>
+                    <button class="action-btn" onclick="navigateTo('sync')" id="quickSyncBtn" disabled>
+                        <span class="btn-icon">🔄</span>
+                        <span class="btn-text">Synchroniser maintenant</span>
+                    </button>
+                    <button class="action-btn" onclick="navigateTo('history')">
+                        <span class="btn-icon">📁</span>
+                        <span class="btn-text">Voir l'historique</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats-overview" id="dashboardStats">
+                <h2>Aperçu Rapide</h2>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalContacts">-</div>
+                        <div class="stat-label">Contacts</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalInvoices">-</div>
+                        <div class="stat-label">Factures</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalProjects">-</div>
+                        <div class="stat-label">Projets</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalRevenue">-</div>
+                        <div class="stat-label">Chiffre d'affaires</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Synchronisation -->
+        <div class="page" id="page-sync">
+            <div class="page-header">
+                <h1>Synchronisation</h1>
+                <p class="subtitle">Extraire les données de Bexio</p>
+            </div>
+
+            <div class="sync-container">
+                <div class="sync-card">
+                    <h2>Synchroniser les données Bexio</h2>
+                    <p>Cette opération va extraire toutes vos données Bexio (contacts, factures, projets) et les exporter vers un fichier Excel.</p>
+
+                    <div class="progress-section" id="progressSection" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-info">
+                            <span id="progressPercent">0%</span>
+                            <span id="progressMessage">En attente...</span>
+                        </div>
+                    </div>
+
+                    <div class="sync-stats">
+                        <div class="sync-stat-item">
+                            <span class="stat-icon">👥</span>
+                            <span class="stat-number" id="syncContacts">0</span>
+                            <span class="stat-name">Contacts</span>
+                        </div>
+                        <div class="sync-stat-item">
+                            <span class="stat-icon">📄</span>
+                            <span class="stat-number" id="syncInvoices">0</span>
+                            <span class="stat-name">Factures</span>
+                        </div>
+                        <div class="sync-stat-item">
+                            <span class="stat-icon">📁</span>
+                            <span class="stat-number" id="syncProjects">0</span>
+                            <span class="stat-name">Projets</span>
+                        </div>
+                        <div class="sync-stat-item">
+                            <span class="stat-icon">💰</span>
+                            <span class="stat-number" id="syncRevenue">CHF 0</span>
+                            <span class="stat-name">CA Total</span>
+                        </div>
+                    </div>
+
+                    <div class="sync-actions">
+                        <button class="btn btn-primary btn-large" id="syncBtn" onclick="startSync()">
+                            <span>🔄</span> Lancer la synchronisation
+                        </button>
+                        <button class="btn btn-secondary" id="downloadBtn" onclick="downloadFile()" style="display: none;">
+                            <span>📥</span> Télécharger le fichier Excel
+                        </button>
+                    </div>
+
+                    <div class="last-sync-info" id="lastSyncInfo" style="display: none;">
+                        <p>Dernière synchronisation : <strong id="lastSyncTime">Jamais</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Historique -->
+        <div class="page" id="page-history">
+            <div class="page-header">
+                <h1>Historique</h1>
+                <p class="subtitle">Fichiers exportés précédemment</p>
+            </div>
+
+            <div class="history-container">
+                <div class="history-list" id="historyList">
+                    <div class="empty-state">
+                        <div class="empty-icon">📂</div>
+                        <h3>Aucun fichier exporté</h3>
+                        <p>Lancez une synchronisation pour voir l'historique de vos exports.</p>
+                        <button class="btn btn-primary" onclick="navigateTo('sync')">
+                            Synchroniser maintenant
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Statistiques -->
+        <div class="page" id="page-stats">
+            <div class="page-header">
+                <h1>Statistiques</h1>
+                <p class="subtitle">Analyses de vos données Bexio</p>
+            </div>
+
+            <div class="stats-container">
+                <div class="stats-grid-large">
+                    <div class="stat-card-large">
+                        <h3>Contacts</h3>
+                        <div class="stat-value-large" id="statsContacts">0</div>
+                        <p class="stat-description">Total des contacts dans Bexio</p>
+                    </div>
+
+                    <div class="stat-card-large">
+                        <h3>Factures</h3>
+                        <div class="stat-value-large" id="statsInvoices">0</div>
+                        <p class="stat-description">Total des factures émises</p>
+                    </div>
+
+                    <div class="stat-card-large">
+                        <h3>Projets</h3>
+                        <div class="stat-value-large" id="statsProjects">0</div>
+                        <p class="stat-description">Projets actifs et terminés</p>
+                    </div>
+
+                    <div class="stat-card-large highlight">
+                        <h3>Chiffre d'affaires</h3>
+                        <div class="stat-value-large" id="statsRevenue">CHF 0</div>
+                        <p class="stat-description">Montant total des factures</p>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <strong>💡 Note :</strong> Ces statistiques sont basées sur la dernière synchronisation.
+                    Lancez une nouvelle synchronisation pour obtenir les données à jour.
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Configuration -->
+        <div class="page" id="page-config">
+            <div class="page-header">
+                <h1>Configuration</h1>
+                <p class="subtitle">Paramètres de l'application</p>
+            </div>
+
+            <div class="config-container">
+                <div class="config-card">
+                    <h2>Connexion à l'API Bexio</h2>
+                    <p>Entrez votre clé API Bexio pour permettre l'extraction des données.</p>
+
                     <div class="form-group">
                         <label for="apiKey">Clé API Bexio</label>
                         <input
                             type="password"
                             id="apiKey"
                             class="input-field"
-                            placeholder="Entrez votre clé API Bexio..."
+                            placeholder="Entrez votre clé API..."
                         >
                         <small class="help-text">
                             Obtenez votre clé API sur
@@ -43,92 +265,48 @@
                             </a>
                         </small>
                     </div>
-                    <button class="btn btn-primary" id="saveConfigBtn" onclick="saveConfig()">
+
+                    <button class="btn btn-primary" onclick="saveConfig()">
                         💾 Enregistrer la configuration
                     </button>
+
+                    <div class="config-status" id="configStatus" style="display: none;">
+                        <div class="status-icon">✅</div>
+                        <div class="status-message">
+                            <strong>Configuration enregistrée</strong>
+                            <p>Votre clé API est valide et fonctionnelle.</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Sync Card -->
-            <div class="card" id="syncCard" style="display: none;">
-                <div class="card-header">
-                    <h2>🔄 Synchronisation</h2>
-                </div>
-                <div class="card-body">
-                    <!-- Progress Bar -->
-                    <div class="progress-container" id="progressContainer" style="display: none;">
-                        <div class="progress-bar">
-                            <div class="progress-bar-fill" id="progressBarFill"></div>
-                        </div>
-                        <p class="progress-text" id="progressText">0%</p>
-                        <p class="progress-message" id="progressMessage">Initialisation...</p>
-                    </div>
-
-                    <!-- Stats -->
-                    <div class="stats-grid" id="statsGrid">
-                        <div class="stat-card">
-                            <div class="stat-icon">👥</div>
-                            <div class="stat-value" id="statContacts">0</div>
-                            <div class="stat-label">Contacts</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">📄</div>
-                            <div class="stat-value" id="statInvoices">0</div>
-                            <div class="stat-label">Factures</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">📁</div>
-                            <div class="stat-value" id="statProjects">0</div>
-                            <div class="stat-label">Projets</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">💰</div>
-                            <div class="stat-value" id="statRevenue">CHF 0</div>
-                            <div class="stat-label">Chiffre d'affaires</div>
-                        </div>
-                    </div>
-
-                    <!-- Last Sync Info -->
-                    <div class="info-box" id="lastSyncInfo" style="display: none;">
-                        <p>Dernière synchronisation : <strong id="lastSyncTime">Jamais</strong></p>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="button-group">
-                        <button class="btn btn-primary btn-large" id="syncBtn" onclick="startSync()">
-                            🔄 Synchroniser les données
-                        </button>
-                        <button class="btn btn-secondary" id="downloadBtn" onclick="downloadFile()" style="display: none;">
-                            📥 Télécharger le fichier Power BI
-                        </button>
+                <div class="config-card">
+                    <h2>À propos</h2>
+                    <div class="about-info">
+                        <p><strong>Application :</strong> Dashboard Bexio → Power BI</p>
+                        <p><strong>Version :</strong> 1.0.0</p>
+                        <p><strong>Développé par :</strong> BSCO Solutions</p>
+                        <p><strong>License :</strong> MIT (Open-Source)</p>
+                        <p>
+                            <a href="https://github.com/csigno1204/BSCO-Dashboard-PowerBI" target="_blank">
+                                📦 Code source sur GitHub
+                            </a>
+                        </p>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Success Message -->
-            <div class="alert alert-success" id="successAlert" style="display: none;">
-                <strong>✅ Succès !</strong>
-                <p id="successMessage"></p>
-            </div>
+        <!-- Alerts -->
+        <div class="alert alert-success" id="successAlert" style="display: none;">
+            <strong>✅ Succès !</strong>
+            <p id="successMessage"></p>
+        </div>
 
-            <!-- Error Message -->
-            <div class="alert alert-error" id="errorAlert" style="display: none;">
-                <strong>❌ Erreur</strong>
-                <p id="errorMessage"></p>
-            </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <p>© 2024 BSCO Solutions | Dashboard Bexio → Power BI v1.0</p>
-            <p>
-                <a href="https://github.com/csigno1204/BSCO-Dashboard-PowerBI" target="_blank">
-                    GitHub
-                </a> |
-                <a href="#" onclick="showAbout()">À propos</a>
-            </p>
-        </footer>
-    </div>
+        <div class="alert alert-error" id="errorAlert" style="display: none;">
+            <strong>❌ Erreur</strong>
+            <p id="errorMessage"></p>
+        </div>
+    </main>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>

@@ -19,10 +19,8 @@ import webbrowser
 import time
 
 # Imports des scripts existants
-from scripts.bexio_api import BexioAPI
-from scripts.data_extraction import DataExtractor
-from scripts.data_transformer import DataTransformer
-from scripts.power_bi_exporter import PowerBIExporter
+from scripts.bexio_extractor import BexioExtractor
+import pandas as pd
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'bexio-dashboard-secret-key-2024'
@@ -65,14 +63,16 @@ def config():
         if not api_key:
             return jsonify({'error': 'API key is required'}), 400
 
-        # Sauvegarder la clé API
+        # Sauvegarder la clé API dans les variables d'environnement pour BexioExtractor
+        os.environ['BEXIO_API_TOKEN'] = api_key
         app_state['api_key'] = api_key
 
         # Tester la connexion
         try:
-            api = BexioAPI(api_key)
-            # Test simple - obtenir les infos de l'entreprise
-            # Si ça fonctionne, la clé est valide
+            extractor = BexioExtractor()
+            # Test simple - essayer d'extraire les contacts (vide c'est ok)
+            extractor.extract_contacts()
+
             app_state['status'] = 'configured'
             app_state['message'] = 'Configuration réussie !'
 
@@ -118,77 +118,93 @@ def run_sync():
         app_state['progress'] = 0
         app_state['message'] = 'Initialisation...'
 
-        # Initialiser les composants
-        api = BexioAPI(app_state['api_key'])
-        extractor = DataExtractor(api)
-        transformer = DataTransformer()
-        exporter = PowerBIExporter()
+        # S'assurer que l'API key est dans l'environnement
+        os.environ['BEXIO_API_TOKEN'] = app_state['api_key']
+
+        # Initialiser l'extracteur
+        extractor = BexioExtractor()
 
         # Étape 1 : Extraction des données
-        app_state['progress'] = 10
+        app_state['progress'] = 20
         app_state['message'] = 'Extraction des contacts...'
         contacts = extractor.extract_contacts()
-        app_state['stats']['contacts'] = len(contacts)
+        app_state['stats']['contacts'] = len(contacts) if contacts else 0
 
-        app_state['progress'] = 30
+        app_state['progress'] = 40
         app_state['message'] = 'Extraction des factures...'
         invoices = extractor.extract_invoices()
-        app_state['stats']['invoices'] = len(invoices)
+        app_state['stats']['invoices'] = len(invoices) if invoices else 0
 
-        app_state['progress'] = 50
+        app_state['progress'] = 60
         app_state['message'] = 'Extraction des projets...'
         projects = extractor.extract_projects()
-        app_state['stats']['projects'] = len(projects)
+        app_state['stats']['projects'] = len(projects) if projects else 0
 
-        # Étape 2 : Transformation
-        app_state['progress'] = 70
-        app_state['message'] = 'Transformation des données...'
-        transformed_data = transformer.transform_all({
-            'contacts': contacts,
-            'invoices': invoices,
-            'projects': projects
-        })
+        # Étape 2 : Conversion en DataFrames
+        app_state['progress'] = 75
+        app_state['message'] = 'Préparation des données...'
+
+        df_contacts = pd.DataFrame(contacts) if contacts else pd.DataFrame()
+        df_invoices = pd.DataFrame(invoices) if invoices else pd.DataFrame()
+        df_projects = pd.DataFrame(projects) if projects else pd.DataFrame()
 
         # Calculer le CA total
-        if 'invoices' in transformed_data and not transformed_data['invoices'].empty:
-            app_state['stats']['total_revenue'] = float(
-                transformed_data['invoices']['total'].sum()
-            )
+        if not df_invoices.empty:
+            if 'total' in df_invoices.columns:
+                app_state['stats']['total_revenue'] = float(df_invoices['total'].sum())
+            elif 'total_gross' in df_invoices.columns:
+                app_state['stats']['total_revenue'] = float(df_invoices['total_gross'].sum())
 
-        # Étape 3 : Export vers Power BI
+        # Étape 3 : Export vers Excel
         app_state['progress'] = 90
-        app_state['message'] = 'Export vers Power BI...'
-        output_path = exporter.export_to_powerbi(transformed_data)
+        app_state['message'] = 'Export vers Excel...'
+
+        # Créer le fichier Excel
+        output_dir = Path(__file__).parent.parent / 'output'
+        output_dir.mkdir(exist_ok=True)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        output_path = output_dir / f'bexio_data_{timestamp}.xlsx'
+
+        # Exporter chaque DataFrame dans une feuille différente
+        with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
+            if not df_contacts.empty:
+                df_contacts.to_excel(writer, sheet_name='Contacts', index=False)
+            if not df_invoices.empty:
+                df_invoices.to_excel(writer, sheet_name='Factures', index=False)
+            if not df_projects.empty:
+                df_projects.to_excel(writer, sheet_name='Projets', index=False)
 
         # Terminé
         app_state['progress'] = 100
         app_state['status'] = 'success'
-        app_state['message'] = f'Synchronisation terminée ! Fichier : {output_path}'
+        app_state['message'] = f'Synchronisation terminée ! Fichier : {output_path.name}'
         app_state['last_sync'] = datetime.now().isoformat()
 
     except Exception as e:
         app_state['status'] = 'error'
         app_state['message'] = f'Erreur : {str(e)}'
         app_state['progress'] = 0
+        import traceback
+        traceback.print_exc()
 
 
 @app.route('/api/download')
 def download_file():
-    """Télécharger le dernier fichier Power BI généré"""
+    """Télécharger le dernier fichier Excel généré"""
     # Trouver le fichier le plus récent dans output/
     output_dir = Path(__file__).parent.parent / 'output'
 
     if not output_dir.exists():
         return jsonify({'error': 'No output directory found'}), 404
 
-    # Chercher les fichiers .pbix
-    pbix_files = list(output_dir.glob('*.pbix'))
+    # Chercher les fichiers Excel
+    excel_files = list(output_dir.glob('*.xlsx'))
 
-    if not pbix_files:
-        return jsonify({'error': 'No Power BI file found'}), 404
+    if not excel_files:
+        return jsonify({'error': 'No Excel file found'}), 404
 
     # Prendre le plus récent
-    latest_file = max(pbix_files, key=lambda f: f.stat().st_mtime)
+    latest_file = max(excel_files, key=lambda f: f.stat().st_mtime)
 
     return send_file(
         latest_file,

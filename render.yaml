@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: bexio-dashboard
+    env: python
+    region: frankfurt
+    plan: free
+    branch: claude/powerbi-bexio-dashboard-011CUw7GAqcxKxDbQXGq6416
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT webapp.app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
