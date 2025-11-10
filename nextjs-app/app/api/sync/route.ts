@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import axios from 'axios'
+import { setSyncedData } from '@/lib/dataStore'
 
 interface BexioContact {
   id: number
@@ -23,9 +24,6 @@ interface BexioProject {
   name: string
   pr_state_id: number
 }
-
-// Temporary storage (in production, use Redis or database)
-let syncedData: any = null
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,13 +73,13 @@ export async function POST(request: NextRequest) {
       return sum + (inv.total || inv.total_gross || 0)
     }, 0)
 
-    // Store data temporarily
-    syncedData = {
+    // Store data using shared dataStore
+    setSyncedData({
       contacts,
       invoices,
       projects,
       timestamp: new Date().toISOString()
-    }
+    })
 
     // Return stats
     return NextResponse.json({
@@ -104,9 +102,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
-
-// Export the synced data getter for the download route
-export function getSyncedData() {
-  return syncedData
 }
