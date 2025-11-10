@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Bexio → Power BI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <h1>📊 Dashboard Bexio → Power BI</h1>
+                <p class="subtitle">Synchronisez vos données Bexio vers Power BI en un clic</p>
+            </div>
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span class="status-text" id="statusText">Non configuré</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Configuration Card -->
+            <div class="card" id="configCard">
+                <div class="card-header">
+                    <h2>⚙️ Configuration</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="apiKey">Clé API Bexio</label>
+                        <input
+                            type="password"
+                            id="apiKey"
+                            class="input-field"
+                            placeholder="Entrez votre clé API Bexio..."
+                        >
+                        <small class="help-text">
+                            Obtenez votre clé API sur
+                            <a href="https://office.bexio.com/index.php/settings/api" target="_blank">
+                                Bexio → Paramètres → API
+                            </a>
+                        </small>
+                    </div>
+                    <button class="btn btn-primary" id="saveConfigBtn" onclick="saveConfig()">
+                        💾 Enregistrer la configuration
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sync Card -->
+            <div class="card" id="syncCard" style="display: none;">
+                <div class="card-header">
+                    <h2>🔄 Synchronisation</h2>
+                </div>
+                <div class="card-body">
+                    <!-- Progress Bar -->
+                    <div class="progress-container" id="progressContainer" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill" id="progressBarFill"></div>
+                        </div>
+                        <p class="progress-text" id="progressText">0%</p>
+                        <p class="progress-message" id="progressMessage">Initialisation...</p>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="stat-card">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-value" id="statContacts">0</div>
+                            <div class="stat-label">Contacts</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📄</div>
+                            <div class="stat-value" id="statInvoices">0</div>
+                            <div class="stat-label">Factures</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📁</div>
+                            <div class="stat-value" id="statProjects">0</div>
+                            <div class="stat-label">Projets</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-value" id="statRevenue">CHF 0</div>
+                            <div class="stat-label">Chiffre d'affaires</div>
+                        </div>
+                    </div>
+
+                    <!-- Last Sync Info -->
+                    <div class="info-box" id="lastSyncInfo" style="display: none;">
+                        <p>Dernière synchronisation : <strong id="lastSyncTime">Jamais</strong></p>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="button-group">
+                        <button class="btn btn-primary btn-large" id="syncBtn" onclick="startSync()">
+                            🔄 Synchroniser les données
+                        </button>
+                        <button class="btn btn-secondary" id="downloadBtn" onclick="downloadFile()" style="display: none;">
+                            📥 Télécharger le fichier Power BI
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div class="alert alert-success" id="successAlert" style="display: none;">
+                <strong>✅ Succès !</strong>
+                <p id="successMessage"></p>
+            </div>
+
+            <!-- Error Message -->
+            <div class="alert alert-error" id="errorAlert" style="display: none;">
+                <strong>❌ Erreur</strong>
+                <p id="errorMessage"></p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>© 2024 BSCO Solutions | Dashboard Bexio → Power BI v1.0</p>
+            <p>
+                <a href="https://github.com/csigno1204/BSCO-Dashboard-PowerBI" target="_blank">
+                    GitHub
+                </a> |
+                <a href="#" onclick="showAbout()">À propos</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
