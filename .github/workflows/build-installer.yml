@@ -244,28 +244,27 @@ jobs:
           # Copier dans le dossier installer
           Copy-Item "dist_README.md" "dist\installer\README.md"
 
-          # Créer un fichier d'information sur le certificat
-          $certInfo = @"
-🔐 INFORMATION CERTIFICAT AUTO-SIGNÉ
+          # Créer un fichier d'information sur le certificat (sans emojis pour compatibilité YAML)
+          @"
+INFORMATION CERTIFICAT AUTO-SIGNE
 ====================================
 
-Ce logiciel est signé avec un certificat AUTO-SIGNÉ généré automatiquement.
+Ce logiciel est signe avec un certificat AUTO-SIGNE genere automatiquement.
 
 Signataire : CN=BSCO Solutions, O=BSCO Solutions, L=Geneva, S=Geneva, C=CH
-Validité   : 3 ans
+Validite   : 3 ans
 
-⚠️ Windows affichera "Unknown Publisher" - C'EST NORMAL !
+Windows affichera Unknown Publisher - C'EST NORMAL !
 
-Pour éliminer ce message, un certificat EV professionnel (~500 EUR/an) serait nécessaire.
+Pour eliminer ce message, un certificat EV professionnel (~500 EUR/an) serait necessaire.
 
-📖 Lisez README.md pour plus d'informations sur l'installation.
+Lisez README.md pour plus d'informations sur l'installation.
 
-✅ Ce logiciel est 100% sécurisé et open-source :
+Ce logiciel est 100% securise et open-source :
    https://github.com/csigno1204/BSCO-Dashboard-PowerBI
-"@
+"@ | Out-File -FilePath "dist\BexioDashboard\CERTIFICAT_INFO.txt" -Encoding UTF8
 
-          $certInfo | Out-File -FilePath "dist\BexioDashboard\CERTIFICAT_INFO.txt" -Encoding UTF8
-          $certInfo | Out-File -FilePath "dist\installer\CERTIFICAT_INFO.txt" -Encoding UTF8
+          Copy-Item "dist\BexioDashboard\CERTIFICAT_INFO.txt" "dist\installer\CERTIFICAT_INFO.txt"
 
           Write-Host "✅ README et informations créés" -ForegroundColor Green
 
