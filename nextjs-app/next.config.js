@@ -5,6 +5,12 @@ const nextConfig = {
     NEXT_PUBLIC_APP_NAME: 'Bexio Dashboard',
     NEXT_PUBLIC_APP_VERSION: '1.0.0',
   },
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
 }
 
 module.exports = nextConfig
