@@ -97,6 +97,9 @@ Source: "..\powerbi\*"; DestDir: "{app}\powerbi"; Flags: ignoreversion recursesu
 ; Assets
 Source: "..\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+; Certificat auto-signé (si présent)
+Source: "..\scripts\certificates\BSCO_CodeSigning_SelfSigned.cer"; DestDir: "{tmp}"; Flags: ignoreversion deleteafterinstall; Check: FileExists(ExpandConstant('{#SourcePath}\..\scripts\certificates\BSCO_CodeSigning_SelfSigned.cer'))
+
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Dirs]
@@ -163,6 +166,52 @@ begin
             RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Microsoft Power BI Desktop', 'InstallPath', UninstallPath) or
             FileExists(ExpandConstant('{commonpf}\Microsoft Power BI Desktop\bin\PBIDesktop.exe')) or
             FileExists(ExpandConstant('{commonpf64}\Microsoft Power BI Desktop\bin\PBIDesktop.exe'));
+end;
+
+// Installe le certificat auto-signé dans le Windows Store
+function InstallSelfSignedCertificate(): Boolean;
+var
+  CertPath: String;
+  ResultCode: Integer;
+begin
+  Result := False;
+
+  // Chemin vers le certificat dans {tmp}
+  CertPath := ExpandConstant('{tmp}\BSCO_CodeSigning_SelfSigned.cer');
+
+  // Vérifier si le certificat existe
+  if not FileExists(CertPath) then
+  begin
+    Log('Certificat auto-signé non trouvé : ' + CertPath);
+    Exit;
+  end;
+
+  Log('Installation du certificat auto-signé : ' + CertPath);
+
+  // Utiliser certutil.exe (inclus dans Windows) pour installer le certificat
+  // -addstore Root = Ajouter au magasin "Autorités de certification racines de confiance"
+  if Exec('certutil.exe', '-addstore -user Root "' + CertPath + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+  begin
+    if ResultCode = 0 then
+    begin
+      Log('Certificat installé avec succès (code: ' + IntToStr(ResultCode) + ')');
+      Result := True;
+    end
+    else
+    begin
+      Log('Erreur installation certificat (code: ' + IntToStr(ResultCode) + ')');
+      // Code 183 = Le certificat existe déjà, c'est OK
+      if ResultCode = 183 then
+      begin
+        Log('Le certificat est déjà installé');
+        Result := True;
+      end;
+    end;
+  end
+  else
+  begin
+    Log('Erreur lors de l''exécution de certutil.exe');
+  end;
 end;
 
 // Télécharge et installe Power BI Desktop
@@ -237,9 +286,21 @@ end;
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   EnvExample, EnvFile: String;
+  CertInstalled: Boolean;
 begin
   if CurStep = ssPostInstall then
   begin
+    // Installer le certificat auto-signé (si présent)
+    CertInstalled := InstallSelfSignedCertificate;
+    if CertInstalled then
+    begin
+      MsgBox('✅ Certificat de sécurité installé avec succès !' + #13#10 + #13#10 +
+             'L''application est maintenant signée numériquement par BSCO Solutions.' + #13#10 + #13#10 +
+             'Note : Un certificat professionnel sera disponible prochainement ' +
+             'pour éliminer tous les avertissements antivirus.',
+             mbInformation, MB_OK);
+    end;
+
     // Créer .env depuis .env.example si n'existe pas
     EnvExample := ExpandConstant('{app}\.env.example');
     EnvFile := ExpandConstant('{app}\.env');
