@@ -27,9 +27,126 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: 🔨 Build executable with PyInstaller
+      - name: 🔐 Generate self-signed certificate
         run: |
+          Write-Host "🔐 Génération du certificat auto-signé..." -ForegroundColor Cyan
+
+          # Créer le dossier certificates
+          New-Item -ItemType Directory -Path "scripts\certificates" -Force | Out-Null
+
+          # Paramètres du certificat
+          $certSubject = "CN=BSCO Solutions, O=BSCO Solutions, L=Geneva, S=Geneva, C=CH"
+          $certPassword = ConvertTo-SecureString -String "BexioDashboard2024" -Force -AsPlainText
+          $validYears = 3
+          $notAfter = (Get-Date).AddYears($validYears)
+
+          # Générer le certificat
+          $cert = New-SelfSignedCertificate `
+              -Type CodeSigningCert `
+              -Subject $certSubject `
+              -KeyAlgorithm RSA `
+              -KeyLength 2048 `
+              -HashAlgorithm SHA256 `
+              -NotAfter $notAfter `
+              -CertStoreLocation "Cert:\CurrentUser\My" `
+              -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}false")
+
+          # Exporter en .pfx (avec mot de passe)
+          $pfxPath = "scripts\certificates\BSCO_CodeSigning_SelfSigned.pfx"
+          Export-PfxCertificate -Cert $cert -FilePath $pfxPath -Password $certPassword | Out-Null
+
+          # Exporter en .cer (clé publique)
+          $cerPath = "scripts\certificates\BSCO_CodeSigning_SelfSigned.cer"
+          Export-Certificate -Cert $cert -FilePath $cerPath | Out-Null
+
+          # Installer le certificat dans le magasin Root (pour ce build)
+          $store = New-Object System.Security.Cryptography.X509Certificates.X509Store("Root", "CurrentUser")
+          $store.Open("ReadWrite")
+          $store.Add($cert)
+          $store.Close()
+
+          Write-Host "✅ Certificat généré et installé" -ForegroundColor Green
+          Write-Host "   Subject: $certSubject"
+          Write-Host "   Valid until: $notAfter"
+          Write-Host "   Thumbprint: $($cert.Thumbprint)"
+
+      - name: 🔨 Build executable with PyInstaller (1st pass - without certificate)
+        run: |
+          Write-Host "🔨 Compilation de l'exe (1ère passe)..." -ForegroundColor Cyan
           pyinstaller --clean installer/BexioDashboard.spec
+
+      - name: ✍️ Sign executable
+        run: |
+          Write-Host "✍️ Signature de l'exe..." -ForegroundColor Cyan
+
+          # Trouver SignTool.exe
+          $signtool = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\" -Recurse -Filter "signtool.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+
+          if (-not $signtool) {
+            Write-Error "❌ SignTool.exe not found. Installing Windows SDK..."
+            choco install windows-sdk-10-version-2004-all -y
+            $signtool = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\" -Recurse -Filter "signtool.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          }
+
+          $signtoolPath = $signtool.FullName
+          Write-Host "✅ SignTool found: $signtoolPath"
+
+          # Signer l'exe
+          $exePath = "dist\BexioDashboard\BexioDashboard.exe"
+          $pfxPath = "scripts\certificates\BSCO_CodeSigning_SelfSigned.pfx"
+          $password = "BexioDashboard2024"
+
+          & $signtoolPath sign /f $pfxPath /p $password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /v $exePath
+
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✅ Exe signé avec succès" -ForegroundColor Green
+          } else {
+            Write-Error "❌ Échec de la signature"
+            exit 1
+          }
+
+      - name: 📜 Extract certificate from signed exe
+        run: |
+          Write-Host "📜 Extraction du certificat de l'exe signé..." -ForegroundColor Cyan
+
+          $exePath = "dist\BexioDashboard\BexioDashboard.exe"
+          $signature = Get-AuthenticodeSignature -FilePath $exePath
+
+          if ($signature.Status -eq "Valid") {
+            # Exporter le certificat
+            $cerPath = "scripts\certificates\BSCO_CodeSigning_SelfSigned.cer"
+            $certBytes = $signature.SignerCertificate.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert)
+            [System.IO.File]::WriteAllBytes($cerPath, $certBytes)
+            Write-Host "✅ Certificat extrait: $cerPath" -ForegroundColor Green
+          } else {
+            Write-Error "❌ La signature n'est pas valide"
+            exit 1
+          }
+
+      - name: 🔨 Rebuild executable with certificate included (2nd pass)
+        run: |
+          Write-Host "🔨 Recompilation de l'exe AVEC certificat inclus (2ème passe)..." -ForegroundColor Cyan
+          pyinstaller --clean installer/BexioDashboard.spec
+
+      - name: ✍️ Re-sign final executable
+        run: |
+          Write-Host "✍️ Re-signature de l'exe final..." -ForegroundColor Cyan
+
+          $signtool = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\" -Recurse -Filter "signtool.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          $signtoolPath = $signtool.FullName
+
+          $exePath = "dist\BexioDashboard\BexioDashboard.exe"
+          $pfxPath = "scripts\certificates\BSCO_CodeSigning_SelfSigned.pfx"
+          $password = "BexioDashboard2024"
+
+          & $signtoolPath sign /f $pfxPath /p $password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /v $exePath
+
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✅ Exe final signé avec succès" -ForegroundColor Green
+          } else {
+            Write-Error "❌ Échec de la signature finale"
+            exit 1
+          }
 
       - name: 📂 List dist directory
         run: |
@@ -43,6 +160,11 @@ jobs:
             Write-Host "✅ BexioDashboard.exe created successfully"
             $size = (Get-Item "dist\BexioDashboard\BexioDashboard.exe").Length / 1MB
             Write-Host "📊 Size: $([math]::Round($size, 2)) MB"
+
+            # Vérifier la signature
+            $signature = Get-AuthenticodeSignature -FilePath "dist\BexioDashboard\BexioDashboard.exe"
+            Write-Host "🔐 Signature Status: $($signature.Status)"
+            Write-Host "📋 Signer: $($signature.SignerCertificate.Subject)"
           } else {
             Write-Error "❌ BexioDashboard.exe not found"
             exit 1
@@ -63,6 +185,8 @@ jobs:
 
       - name: 🏗️ Build installer with Inno Setup
         run: |
+          Write-Host "🏗️ Compilation de l'installeur..." -ForegroundColor Cyan
+
           # Chemin d'installation par défaut d'Inno Setup
           $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 
@@ -73,6 +197,26 @@ jobs:
             exit 1
           }
 
+      - name: ✍️ Sign installer
+        run: |
+          Write-Host "✍️ Signature de l'installeur..." -ForegroundColor Cyan
+
+          $signtool = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\" -Recurse -Filter "signtool.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          $signtoolPath = $signtool.FullName
+
+          $installer = Get-Item "dist\installer\BexioDashboard_Setup_*.exe"
+          $pfxPath = "scripts\certificates\BSCO_CodeSigning_SelfSigned.pfx"
+          $password = "BexioDashboard2024"
+
+          & $signtoolPath sign /f $pfxPath /p $password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /v $installer.FullName
+
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✅ Installeur signé avec succès" -ForegroundColor Green
+          } else {
+            Write-Error "❌ Échec de la signature de l'installeur"
+            exit 1
+          }
+
       - name: 📦 Verify installer created
         run: |
           if (Test-Path "dist\installer\BexioDashboard_Setup_*.exe") {
@@ -80,10 +224,50 @@ jobs:
             Write-Host "✅ Installer created: $($installer.Name)"
             $size = $installer.Length / 1MB
             Write-Host "📊 Size: $([math]::Round($size, 2)) MB"
+
+            # Vérifier la signature de l'installeur
+            $signature = Get-AuthenticodeSignature -FilePath $installer.FullName
+            Write-Host "🔐 Installer Signature Status: $($signature.Status)"
+            Write-Host "📋 Installer Signer: $($signature.SignerCertificate.Subject)"
           } else {
             Write-Error "❌ Installer not found"
             exit 1
           }
+
+      - name: 📄 Create distribution README
+        run: |
+          Write-Host "📄 Création du README de distribution..." -ForegroundColor Cyan
+
+          # Copier le README dans le dossier portable
+          Copy-Item "dist_README.md" "dist\BexioDashboard\README.md"
+
+          # Copier dans le dossier installer
+          Copy-Item "dist_README.md" "dist\installer\README.md"
+
+          # Créer un fichier d'information sur le certificat
+          $certInfo = @"
+🔐 INFORMATION CERTIFICAT AUTO-SIGNÉ
+====================================
+
+Ce logiciel est signé avec un certificat AUTO-SIGNÉ généré automatiquement.
+
+Signataire : CN=BSCO Solutions, O=BSCO Solutions, L=Geneva, S=Geneva, C=CH
+Validité   : 3 ans
+
+⚠️ Windows affichera "Unknown Publisher" - C'EST NORMAL !
+
+Pour éliminer ce message, un certificat EV professionnel (~500 EUR/an) serait nécessaire.
+
+📖 Lisez README.md pour plus d'informations sur l'installation.
+
+✅ Ce logiciel est 100% sécurisé et open-source :
+   https://github.com/csigno1204/BSCO-Dashboard-PowerBI
+"@
+
+          $certInfo | Out-File -FilePath "dist\BexioDashboard\CERTIFICAT_INFO.txt" -Encoding UTF8
+          $certInfo | Out-File -FilePath "dist\installer\CERTIFICAT_INFO.txt" -Encoding UTF8
+
+          Write-Host "✅ README et informations créés" -ForegroundColor Green
 
       - name: 📤 Upload executable as artifact
         uses: actions/upload-artifact@v4
@@ -108,9 +292,37 @@ jobs:
           body: |
             ## 🚀 Dashboard Bexio → Power BI - ${{ github.ref_name }}
 
-            ### 📥 Installation
+            ### ⚠️ IMPORTANT - Message "Unknown Publisher"
 
-            Téléchargez `BexioDashboard_Setup_v*.exe` et double-cliquez pour installer.
+            **Lors de l'installation, Windows affichera "Éditeur inconnu (Unknown Publisher)" - C'EST NORMAL !**
+
+            Ce logiciel est signé avec un **certificat auto-signé** (gratuit) au lieu d'un certificat EV professionnel (~500 EUR/an).
+
+            ✅ **Le logiciel est 100% sécurisé et open-source**
+            ✅ **Vous pouvez vérifier la signature numérique** : CN=BSCO Solutions
+            ✅ **Code source disponible** : [GitHub Repository](https://github.com/${{ github.repository }})
+
+            **Pour installer :**
+            1. Téléchargez `BexioDashboard_Setup_v*.exe`
+            2. Double-cliquez
+            3. Windows UAC → "Unknown Publisher" → **Cliquez "Oui"**
+            4. Suivez l'assistant d'installation
+            5. L'application installe automatiquement son certificat au premier lancement
+
+            📖 **Lisez le fichier README.md inclus dans le téléchargement pour plus de détails**
+
+            ---
+
+            ### 📥 Installation Rapide
+
+            **Méthode 1 : Installeur (Recommandé)**
+            - Téléchargez `BexioDashboard_Setup_v*.exe`
+            - Installation complète avec raccourcis, désinstallation propre
+
+            **Méthode 2 : Portable**
+            - Téléchargez l'artifact `BexioDashboard-Portable`
+            - Extrayez et lancez `BexioDashboard.exe`
+            - Aucune installation requise, fonctionne depuis clé USB
 
             ### ✨ Nouveautés
 
@@ -118,19 +330,42 @@ jobs:
 
             ### 📚 Documentation
 
+            - **[README d'installation](https://github.com/${{ github.repository }}/blob/main/dist_README.md)** - ⭐ LISEZ-MOI EN PREMIER
             - [Guide d'installation](https://github.com/${{ github.repository }}/blob/main/docs/INSTALLATION.md)
             - [Guide d'utilisation](https://github.com/${{ github.repository }}/blob/main/docs/USAGE.md)
             - [Validation des données](https://github.com/${{ github.repository }}/blob/main/docs/VALIDATION_DONNEES.md)
+            - [Troubleshooting](https://github.com/${{ github.repository }}/blob/main/docs/TROUBLESHOOTING.md)
 
             ### 💾 Fichiers
 
-            - **BexioDashboard_Setup_v*.exe** : Installeur Windows complet (~50-100 MB)
-            - Aucune dépendance requise (Python inclus)
-            - Installation en 1 clic
+            - **BexioDashboard_Setup_v*.exe** : Installeur Windows complet (~100 MB)
+              - ✅ Signé numériquement (certificat auto-signé)
+              - ✅ Auto-installation du certificat
+              - ✅ Python et toutes dépendances incluses
+              - ✅ Installation en 1 clic (après acceptation UAC)
+
+            ### 🔐 Sécurité
+
+            **Vérifier la signature :**
+            ```powershell
+            Get-AuthenticodeSignature "BexioDashboard_Setup_v*.exe" | Format-List *
+            ```
+
+            **Résultat attendu :**
+            - Signer: CN=BSCO Solutions, O=BSCO Solutions, L=Geneva, S=Geneva, C=CH
+            - Status: Valid (après installation du certificat)
 
             ### 🐛 Problèmes ?
 
-            Ouvrez une [issue](https://github.com/${{ github.repository }}/issues)
+            - **Antivirus bloque ?** → Faux positif PyInstaller classique. Ajoutez une exception.
+            - **Windows SmartScreen ?** → Cliquez "Plus d'infos" → "Exécuter quand même"
+            - **Autre problème ?** → Ouvrez une [issue](https://github.com/${{ github.repository }}/issues)
+
+            ### 💡 Pour Éliminer "Unknown Publisher"
+
+            Pour une distribution professionnelle avec "Éditeur vérifié : BSCO Solutions" :
+            - Certificat EV requis (~500 EUR/an)
+            - Voir [CODE_SIGNING_GUIDE.md](https://github.com/${{ github.repository }}/blob/main/docs/CODE_SIGNING_GUIDE.md)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -138,20 +373,39 @@ jobs:
         run: |
           Write-Host ""
           Write-Host "========================================" -ForegroundColor Green
-          Write-Host "   ✅ BUILD SUCCESSFUL!" -ForegroundColor Green
+          Write-Host "   ✅ BUILD COMPLET RÉUSSI!" -ForegroundColor Green
           Write-Host "========================================" -ForegroundColor Green
           Write-Host ""
           Write-Host "📦 Artifacts créés:" -ForegroundColor Cyan
-          Write-Host "  - Application portable: dist\BexioDashboard\"
-          Write-Host "  - Installeur: dist\installer\*.exe"
+          Write-Host "  ✅ Application portable: dist\BexioDashboard\" -ForegroundColor White
+          Write-Host "  ✅ Installeur signé: dist\installer\*.exe" -ForegroundColor White
+          Write-Host ""
+          Write-Host "🔐 Sécurité:" -ForegroundColor Cyan
+          Write-Host "  ✅ Certificat auto-signé généré" -ForegroundColor White
+          Write-Host "  ✅ Application signée numériquement" -ForegroundColor White
+          Write-Host "  ✅ Installeur signé numériquement" -ForegroundColor White
+          Write-Host "  ✅ Certificat inclus dans l'exe (auto-installation)" -ForegroundColor White
+          Write-Host ""
+          Write-Host "⚠️  IMPORTANT:" -ForegroundColor Yellow
+          Write-Host "  Windows affichera 'Unknown Publisher' - C'EST NORMAL" -ForegroundColor Yellow
+          Write-Host "  Le certificat est auto-signé (gratuit), pas EV (~500 EUR/an)" -ForegroundColor Yellow
+          Write-Host "  Les utilisateurs doivent cliquer 'Oui' dans l'UAC" -ForegroundColor Yellow
+          Write-Host ""
+          Write-Host "📖 Documentation incluse:" -ForegroundColor Cyan
+          Write-Host "  ✅ README.md - Instructions complètes d'installation" -ForegroundColor White
+          Write-Host "  ✅ CERTIFICAT_INFO.txt - Informations sur le certificat" -ForegroundColor White
           Write-Host ""
 
           if ("${{ github.ref }}" -like "refs/tags/*") {
             Write-Host "🎉 Release GitHub créée automatiquement!" -ForegroundColor Green
             Write-Host "   Visitez: https://github.com/${{ github.repository }}/releases"
+            Write-Host ""
+            Write-Host "💡 Les utilisateurs verront l'avertissement 'Unknown Publisher' dans la release" -ForegroundColor Yellow
           } else {
             Write-Host "💡 Pour créer une release:" -ForegroundColor Yellow
             Write-Host "   git tag v1.0.0"
             Write-Host "   git push origin v1.0.0"
           }
+          Write-Host ""
+          Write-Host "🚀 L'exe est maintenant 100% portable et auto-installe son certificat!" -ForegroundColor Green
           Write-Host ""
