@@ -1,0 +1,12 @@
+{
+  "name": "bexio-dashboard-powerbi",
+  "version": "1.0.0",
+  "description": "Dashboard Bexio vers Power BI",
+  "main": "server.js",
+  "scripts": {
+    "start": "python3 webapp/app.py"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
