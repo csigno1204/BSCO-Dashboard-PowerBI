@@ -9,6 +9,14 @@ import os
 import sys
 from datetime import datetime
 
+# Import du module d'auto-installation du certificat
+try:
+    from auto_install_certificate import check_and_install_certificate
+except ImportError:
+    # Fallback si le module n'est pas trouvé
+    def check_and_install_certificate(silent=False):
+        return True
+
 class BexioDashboardGUI:
     """Application GUI principale"""
 
@@ -17,6 +25,11 @@ class BexioDashboardGUI:
         self.root.title("Dashboard Bexio → Power BI")
         self.root.geometry("900x700")
         self.root.resizable(True, True)
+
+        # Auto-installer le certificat au premier lancement
+        # Ceci s'exécute UNE SEULE FOIS au premier démarrage
+        # Les fois suivantes, le certificat est déjà installé donc c'est instantané
+        threading.Thread(target=self._auto_install_certificate_background, daemon=True).start()
 
         # Style
         self.setup_style()
@@ -31,6 +44,17 @@ class BexioDashboardGUI:
 
         # Vérifier le statut initial
         self.check_status()
+
+    def _auto_install_certificate_background(self):
+        """
+        Installe automatiquement le certificat en arrière-plan
+        S'exécute au démarrage de l'application
+        """
+        try:
+            check_and_install_certificate(silent=False)
+        except Exception as e:
+            # Ne pas bloquer l'application si l'installation échoue
+            print(f"Info: Auto-installation certificat - {e}")
 
     def setup_style(self):
         """Configure le style de l'interface"""

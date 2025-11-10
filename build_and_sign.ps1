@@ -97,10 +97,11 @@ if (Test-Path "dist\BexioDashboard\BexioDashboard.exe") {
 }
 
 # ====================================================================
-# 4. EXTRACTION DU CERTIFICAT
+# 4. EXTRACTION DU CERTIFICAT (Pour inclusion dans l'exe)
 # ====================================================================
 
 Write-Host "4️⃣  Extraction du certificat depuis l'exe signé..." -ForegroundColor Yellow
+Write-Host "   (Le certificat sera inclus dans l'exe pour auto-installation)" -ForegroundColor Gray
 Write-Host ""
 
 & .\scripts\extract_certificate.ps1 -ExePath "dist\BexioDashboard\BexioDashboard.exe"
@@ -108,6 +109,52 @@ Write-Host ""
 if ($LASTEXITCODE -ne 0) {
     Write-Host ""
     Write-Host "❌ Erreur lors de l'extraction du certificat" -ForegroundColor Red
+    exit 1
+}
+
+# Vérifier que le certificat est bien extrait
+if (Test-Path "scripts\certificates\BSCO_CodeSigning_SelfSigned.cer") {
+    Write-Host "   ✅ Certificat extrait et prêt pour inclusion" -ForegroundColor Green
+} else {
+    Write-Host "   ⚠️  Certificat non trouvé, l'auto-installation ne fonctionnera pas" -ForegroundColor Yellow
+}
+Write-Host ""
+
+# ====================================================================
+# 4b. RECOMPILATION AVEC CERTIFICAT INCLUS
+# ====================================================================
+
+Write-Host "4b️⃣  Recompilation avec certificat inclus..." -ForegroundColor Yellow
+Write-Host "   (PyInstaller va inclure le certificat dans l'exe)" -ForegroundColor Gray
+Write-Host ""
+
+# Recompiler pour inclure le certificat
+pyinstaller --clean installer\BexioDashboard.spec
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host ""
+    Write-Host "❌ Erreur lors de la recompilation PyInstaller" -ForegroundColor Red
+    exit 1
+}
+
+Write-Host ""
+Write-Host "   ✅ Recompilation réussie avec certificat inclus" -ForegroundColor Green
+$exeSize = (Get-Item "dist\BexioDashboard\BexioDashboard.exe").Length / 1MB
+Write-Host "   📊 Taille exe : $([math]::Round($exeSize, 2)) MB" -ForegroundColor Cyan
+Write-Host ""
+
+# ====================================================================
+# 4c. RE-SIGNATURE DE L'EXE FINAL
+# ====================================================================
+
+Write-Host "4c️⃣  Re-signature de l'exe final (avec certificat inclus)..." -ForegroundColor Yellow
+Write-Host ""
+
+& .\scripts\sign_executable.ps1 -ExePath "dist\BexioDashboard\BexioDashboard.exe"
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host ""
+    Write-Host "❌ Erreur lors de la re-signature de l'application" -ForegroundColor Red
     exit 1
 }
 Write-Host ""
@@ -212,8 +259,20 @@ if (-not $SkipInstaller) {
     Write-Host "   4. Application prête à utiliser !" -ForegroundColor White
     Write-Host ""
 } else {
-    Write-Host "📦 APPLICATION SIGNÉE :" -ForegroundColor Cyan
+    Write-Host "📦 APPLICATION PORTABLE AUTONOME :" -ForegroundColor Cyan
     Write-Host "   dist\BexioDashboard\BexioDashboard.exe" -ForegroundColor White
+    Write-Host ""
+    Write-Host "🎉 CET EXE EST 100% PORTABLE :" -ForegroundColor Yellow
+    Write-Host "   ✅ Application complète (Python + toutes dépendances)" -ForegroundColor White
+    Write-Host "   ✅ Certificat auto-signé INCLUS dans l'exe" -ForegroundColor White
+    Write-Host "   ✅ AUTO-INSTALLATION automatique au 1er lancement" -ForegroundColor White
+    Write-Host "   ✅ Signature numérique valide" -ForegroundColor White
+    Write-Host ""
+    Write-Host "🚀 UTILISATION PORTABLE :" -ForegroundColor Green
+    Write-Host "   1. Copiez l'exe n'importe où (clé USB, réseau, etc.)" -ForegroundColor White
+    Write-Host "   2. Double-clic sur l'exe" -ForegroundColor White
+    Write-Host "   3. Au 1er lancement : Certificat s'auto-installe" -ForegroundColor White
+    Write-Host "   4. Application prête ! (les fois suivantes = instantané)" -ForegroundColor White
     Write-Host ""
 }
 

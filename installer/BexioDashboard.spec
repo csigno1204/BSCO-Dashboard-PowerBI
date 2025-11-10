@@ -104,6 +104,9 @@ a = Analysis(
         # Base de données
         'sqlite3',
 
+        # Auto-installation certificat
+        'auto_install_certificate',
+
         # Dépendances optionnelles (futures extensions)
         'sqlalchemy',
         'pyarrow',
@@ -161,12 +164,19 @@ scripts_to_include = [
     'view_history.py',
     'setup_scheduler.py',
     'generate_pdf_report.py',
+    'auto_install_certificate.py',  # ← NOUVEAU: Auto-installation certificat
 ]
 
 for script in scripts_to_include:
     script_path = scripts_dir / script
     if script_path.exists():
         a.datas += [(f'scripts/{script}', str(script_path), 'DATA')]
+
+# Certificat auto-signé (si présent) - ESSENTIEL pour auto-installation
+cert_file = scripts_dir / 'certificates' / 'BSCO_CodeSigning_SelfSigned.cer'
+if cert_file.exists():
+    a.datas += [('certificates/BSCO_CodeSigning_SelfSigned.cer', str(cert_file), 'DATA')]
+    print(f"✅ Certificat inclus dans l'exe : {cert_file}")
 
 # Documentation
 docs_to_include = [
