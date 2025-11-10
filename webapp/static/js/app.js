@@ -1,31 +1,66 @@
 /**
- * Dashboard Bexio → Power BI - Frontend Application
+ * Dashboard Bexio → Power BI - Application Web
  */
 
 // État global
-let syncInterval = null;
+let currentPage = 'dashboard';
 
-// Initialisation au chargement
+// Initialisation
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Dashboard Bexio → Power BI - Web App loaded');
-    checkStatus();
+    console.log('Dashboard Bexio → Power BI loaded');
+
+    // Initialiser la navigation
+    initNavigation();
+
+    // Charger la configuration
     loadConfig();
 
-    // Vérifier le statut toutes les 2 secondes pendant une sync
+    // Vérifier le statut périodiquement
     setInterval(checkStatus, 2000);
+
+    // Premier check du statut
+    checkStatus();
 });
 
 /**
- * Vérifier le statut de l'application
+ * Initialiser la navigation du menu
  */
-async function checkStatus() {
-    try {
-        const response = await fetch('/api/status');
-        const data = await response.json();
+function initNavigation() {
+    const menuItems = document.querySelectorAll('.menu-item');
 
-        updateUI(data);
-    } catch (error) {
-        console.error('Error checking status:', error);
+    menuItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const page = item.dataset.page;
+            navigateTo(page);
+        });
+    });
+}
+
+/**
+ * Naviguer vers une page
+ */
+function navigateTo(pageName) {
+    // Désactiver tous les items du menu
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+    });
+
+    // Activer l'item correspondant
+    const activeItem = document.querySelector(`[data-page="${pageName}"]`);
+    if (activeItem) {
+        activeItem.classList.add('active');
+    }
+
+    // Masquer toutes les pages
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+    });
+
+    // Afficher la page demandée
+    const targetPage = document.getElementById(`page-${pageName}`);
+    if (targetPage) {
+        targetPage.classList.add('active');
+        currentPage = pageName;
     }
 }
 
@@ -39,7 +74,9 @@ async function loadConfig() {
 
         if (data.configured) {
             document.getElementById('apiKey').value = data.api_key_preview || '';
-            showSyncCard();
+            updateAPIStatus(true);
+            // Activer le bouton de sync rapide
+            document.getElementById('quickSyncBtn').disabled = false;
         }
     } catch (error) {
         console.error('Error loading config:', error);
@@ -57,16 +94,10 @@ async function saveConfig() {
         return;
     }
 
-    const btn = document.getElementById('saveConfigBtn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Vérification...';
-
     try {
         const response = await fetch('/api/config', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ api_key: apiKey })
         });
 
@@ -74,16 +105,125 @@ async function saveConfig() {
 
         if (response.ok) {
             showSuccess('Configuration enregistrée avec succès !');
-            showSyncCard();
+            updateAPIStatus(true);
+            document.getElementById('configStatus').style.display = 'flex';
+            document.getElementById('quickSyncBtn').disabled = false;
         } else {
             showError(data.error || 'Erreur lors de la configuration');
+            updateAPIStatus(false);
         }
     } catch (error) {
         showError('Erreur de connexion au serveur');
         console.error('Error saving config:', error);
-    } finally {
-        btn.disabled = false;
-        btn.textContent = '💾 Enregistrer la configuration';
+    }
+}
+
+/**
+ * Mettre à jour le statut API dans la sidebar
+ */
+function updateAPIStatus(configured) {
+    const statusBadge = document.getElementById('apiStatus');
+    if (configured) {
+        statusBadge.classList.add('configured');
+        statusBadge.querySelector('.status-text').textContent = 'Configuré';
+    } else {
+        statusBadge.classList.remove('configured');
+        statusBadge.querySelector('.status-text').textContent = 'Non configuré';
+    }
+}
+
+/**
+ * Vérifier le statut de l'application
+ */
+async function checkStatus() {
+    try {
+        const response = await fetch('/api/status');
+        const data = await response.json();
+
+        updateUI(data);
+    } catch (error) {
+        console.error('Error checking status:', error);
+    }
+}
+
+/**
+ * Mettre à jour l'interface avec les données
+ */
+function updateUI(state) {
+    // Mettre à jour les stats de synchronisation
+    if (state.stats) {
+        const contacts = state.stats.contacts || 0;
+        const invoices = state.stats.invoices || 0;
+        const projects = state.stats.projects || 0;
+        const revenue = state.stats.total_revenue || 0;
+
+        // Page Sync
+        document.getElementById('syncContacts').textContent = contacts.toLocaleString();
+        document.getElementById('syncInvoices').textContent = invoices.toLocaleString();
+        document.getElementById('syncProjects').textContent = projects.toLocaleString();
+        document.getElementById('syncRevenue').textContent = 'CHF ' + revenue.toLocaleString('fr-CH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        // Dashboard
+        document.getElementById('totalContacts').textContent = contacts > 0 ? contacts.toLocaleString() : '-';
+        document.getElementById('totalInvoices').textContent = invoices > 0 ? invoices.toLocaleString() : '-';
+        document.getElementById('totalProjects').textContent = projects > 0 ? projects.toLocaleString() : '-';
+        document.getElementById('totalRevenue').textContent = revenue > 0 ? 'CHF ' + revenue.toLocaleString('fr-CH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }) : '-';
+
+        // Page Stats
+        document.getElementById('statsContacts').textContent = contacts.toLocaleString();
+        document.getElementById('statsInvoices').textContent = invoices.toLocaleString();
+        document.getElementById('statsProjects').textContent = projects.toLocaleString();
+        document.getElementById('statsRevenue').textContent = 'CHF ' + revenue.toLocaleString('fr-CH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    // Gérer la progression
+    if (state.status === 'syncing') {
+        document.getElementById('progressSection').style.display = 'block';
+        document.getElementById('progressFill').style.width = state.progress + '%';
+        document.getElementById('progressPercent').textContent = state.progress + '%';
+        document.getElementById('progressMessage').textContent = state.message;
+
+        // Désactiver le bouton de sync
+        const syncBtn = document.getElementById('syncBtn');
+        syncBtn.disabled = true;
+        syncBtn.innerHTML = '<span>⏳</span> Synchronisation en cours...';
+    } else {
+        // Réactiver le bouton de sync
+        const syncBtn = document.getElementById('syncBtn');
+        syncBtn.disabled = false;
+        syncBtn.innerHTML = '<span>🔄</span> Lancer la synchronisation';
+    }
+
+    // Gérer le succès
+    if (state.status === 'success') {
+        document.getElementById('downloadBtn').style.display = 'inline-flex';
+
+        // Afficher l'heure de la dernière sync
+        if (state.last_sync) {
+            const lastSyncDate = new Date(state.last_sync);
+            document.getElementById('lastSyncTime').textContent = lastSyncDate.toLocaleString('fr-CH');
+            document.getElementById('lastSyncInfo').style.display = 'block';
+        }
+
+        // Masquer la progression après 2 secondes
+        setTimeout(() => {
+            document.getElementById('progressSection').style.display = 'none';
+        }, 2000);
+    }
+
+    // Gérer les erreurs
+    if (state.status === 'error') {
+        showError(state.message);
+        document.getElementById('progressSection').style.display = 'none';
     }
 }
 
@@ -91,135 +231,30 @@ async function saveConfig() {
  * Démarrer la synchronisation
  */
 async function startSync() {
-    const btn = document.getElementById('syncBtn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Synchronisation en cours...';
-
-    // Afficher la barre de progression
-    document.getElementById('progressContainer').style.display = 'block';
-    document.getElementById('statsGrid').style.display = 'grid';
-
     try {
         const response = await fetch('/api/sync', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' }
         });
 
         if (response.ok) {
-            // La synchronisation a démarré, on continue à vérifier le statut
             console.log('Synchronization started');
+            document.getElementById('progressSection').style.display = 'block';
         } else {
             const data = await response.json();
             showError(data.error || 'Erreur lors de la synchronisation');
-            btn.disabled = false;
-            btn.textContent = '🔄 Synchroniser les données';
         }
     } catch (error) {
         showError('Erreur de connexion au serveur');
         console.error('Error starting sync:', error);
-        btn.disabled = false;
-        btn.textContent = '🔄 Synchroniser les données';
     }
 }
 
 /**
- * Télécharger le fichier Power BI
+ * Télécharger le fichier Excel
  */
-async function downloadFile() {
+function downloadFile() {
     window.location.href = '/api/download';
-}
-
-/**
- * Mettre à jour l'interface
- */
-function updateUI(state) {
-    // Mettre à jour le statut
-    const statusDot = document.getElementById('statusDot');
-    const statusText = document.getElementById('statusText');
-
-    statusDot.className = 'status-dot ' + state.status;
-
-    switch (state.status) {
-        case 'idle':
-            statusText.textContent = 'Non configuré';
-            break;
-        case 'configured':
-            statusText.textContent = 'Configuré';
-            break;
-        case 'syncing':
-            statusText.textContent = 'Synchronisation en cours...';
-            break;
-        case 'success':
-            statusText.textContent = 'Synchronisation réussie';
-            break;
-        case 'error':
-            statusText.textContent = 'Erreur';
-            break;
-    }
-
-    // Mettre à jour la progression
-    if (state.status === 'syncing') {
-        document.getElementById('progressContainer').style.display = 'block';
-        document.getElementById('progressBarFill').style.width = state.progress + '%';
-        document.getElementById('progressText').textContent = state.progress + '%';
-        document.getElementById('progressMessage').textContent = state.message;
-    }
-
-    // Mettre à jour les stats
-    if (state.stats) {
-        document.getElementById('statContacts').textContent = state.stats.contacts.toLocaleString();
-        document.getElementById('statInvoices').textContent = state.stats.invoices.toLocaleString();
-        document.getElementById('statProjects').textContent = state.stats.projects.toLocaleString();
-        document.getElementById('statRevenue').textContent =
-            'CHF ' + state.stats.total_revenue.toLocaleString('fr-CH', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-    }
-
-    // Afficher la dernière sync
-    if (state.last_sync) {
-        const lastSyncDate = new Date(state.last_sync);
-        document.getElementById('lastSyncTime').textContent = lastSyncDate.toLocaleString('fr-CH');
-        document.getElementById('lastSyncInfo').style.display = 'block';
-    }
-
-    // Gérer l'état du bouton de sync
-    const syncBtn = document.getElementById('syncBtn');
-    if (state.status === 'syncing') {
-        syncBtn.disabled = true;
-        syncBtn.textContent = '⏳ Synchronisation en cours...';
-    } else {
-        syncBtn.disabled = false;
-        syncBtn.textContent = '🔄 Synchroniser les données';
-    }
-
-    // Afficher le bouton de téléchargement si succès
-    if (state.status === 'success') {
-        document.getElementById('downloadBtn').style.display = 'inline-flex';
-        showSuccess(state.message);
-
-        // Masquer la barre de progression après 2 secondes
-        setTimeout(() => {
-            document.getElementById('progressContainer').style.display = 'none';
-        }, 2000);
-    }
-
-    // Afficher l'erreur si nécessaire
-    if (state.status === 'error') {
-        showError(state.message);
-        document.getElementById('progressContainer').style.display = 'none';
-    }
-}
-
-/**
- * Afficher la carte de synchronisation
- */
-function showSyncCard() {
-    document.getElementById('configCard').style.display = 'none';
-    document.getElementById('syncCard').style.display = 'block';
 }
 
 /**
@@ -230,10 +265,8 @@ function showSuccess(message) {
     document.getElementById('successMessage').textContent = message;
     alert.style.display = 'block';
 
-    // Masquer l'alerte d'erreur
     document.getElementById('errorAlert').style.display = 'none';
 
-    // Masquer après 5 secondes
     setTimeout(() => {
         alert.style.display = 'none';
     }, 5000);
@@ -247,26 +280,9 @@ function showError(message) {
     document.getElementById('errorMessage').textContent = message;
     alert.style.display = 'block';
 
-    // Masquer l'alerte de succès
     document.getElementById('successAlert').style.display = 'none';
 
-    // Masquer après 5 secondes
     setTimeout(() => {
         alert.style.display = 'none';
     }, 5000);
-}
-
-/**
- * Afficher la fenêtre À propos
- */
-function showAbout() {
-    alert(`Dashboard Bexio → Power BI
-Version 1.0
-
-Application web pour synchroniser vos données Bexio vers Power BI.
-
-Développé par BSCO Solutions
-© 2024
-
-GitHub: https://github.com/csigno1204/BSCO-Dashboard-PowerBI`);
 }
