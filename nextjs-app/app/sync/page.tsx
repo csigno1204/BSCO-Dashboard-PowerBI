@@ -33,6 +33,8 @@ export default function SyncPage() {
       if (response.data.success) {
         // Update stats
         setStats(response.data.stats)
+        // Save last sync time
+        localStorage.setItem('last_sync_time', new Date().toISOString())
         finishSync()
         setSuccess('Synchronisation terminée avec succès !')
       } else {
