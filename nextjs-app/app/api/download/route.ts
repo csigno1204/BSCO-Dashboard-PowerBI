@@ -27,9 +27,14 @@ export async function GET(request: NextRequest) {
       { 'Métrique': 'Factures', 'Valeur': syncedData.invoices?.length || 0 },
       { 'Métrique': 'Offres', 'Valeur': syncedData.offers?.length || 0 },
       { 'Métrique': 'Commandes', 'Valeur': syncedData.orders?.length || 0 },
+      { 'Métrique': 'Notes de crédit', 'Valeur': syncedData.creditNotes?.length || 0 },
       { 'Métrique': 'Projets', 'Valeur': syncedData.projects?.length || 0 },
       { 'Métrique': 'Temps trackés', 'Valeur': syncedData.timesheets?.length || 0 },
       { 'Métrique': 'Articles', 'Valeur': syncedData.articles?.length || 0 },
+      { 'Métrique': 'Paiements', 'Valeur': syncedData.payments?.length || 0 },
+      { 'Métrique': 'Dépenses', 'Valeur': syncedData.expenses?.length || 0 },
+      { 'Métrique': 'Notes', 'Valeur': syncedData.notes?.length || 0 },
+      { 'Métrique': 'Tâches', 'Valeur': syncedData.tasks?.length || 0 },
       { 'Métrique': '', 'Valeur': '' },
       { 'Métrique': '=== ANALYSE FACTURES ===', 'Valeur': '' },
       { 'Métrique': 'Chiffre d\'affaires total', 'Valeur': syncedData.analytics?.invoiceAnalysis?.totalRevenue?.toFixed(2) || 0 },
@@ -40,6 +45,17 @@ export async function GET(request: NextRequest) {
       { 'Métrique': 'Factures payées', 'Valeur': syncedData.analytics?.invoiceAnalysis?.paid || 0 },
       { 'Métrique': 'Factures en attente', 'Valeur': syncedData.analytics?.invoiceAnalysis?.pending || 0 },
       { 'Métrique': 'Factures en retard', 'Valeur': syncedData.analytics?.invoiceAnalysis?.overdue || 0 },
+      { 'Métrique': '', 'Valeur': '' },
+      { 'Métrique': '=== ANALYSE NOTES DE CRÉDIT ===', 'Valeur': '' },
+      { 'Métrique': 'Total notes de crédit', 'Valeur': syncedData.analytics?.creditNoteAnalysis?.totalCreditNotes?.toFixed(2) || 0 },
+      { 'Métrique': 'CA net (après NC)', 'Valeur': syncedData.analytics?.creditNoteAnalysis?.netRevenue?.toFixed(2) || 0 },
+      { 'Métrique': '', 'Valeur': '' },
+      { 'Métrique': '=== ANALYSE PAIEMENTS ===', 'Valeur': '' },
+      { 'Métrique': 'Total paiements reçus', 'Valeur': syncedData.analytics?.paymentAnalysis?.totalPayments?.toFixed(2) || 0 },
+      { 'Métrique': 'Paiements en attente', 'Valeur': syncedData.analytics?.paymentAnalysis?.openPayments?.toFixed(2) || 0 },
+      { 'Métrique': '', 'Valeur': '' },
+      { 'Métrique': '=== ANALYSE DÉPENSES ===', 'Valeur': '' },
+      { 'Métrique': 'Total dépenses', 'Valeur': syncedData.analytics?.expenseAnalysis?.totalExpenses?.toFixed(2) || 0 },
       { 'Métrique': '', 'Valeur': '' },
       { 'Métrique': '=== ANALYSE OFFRES ===', 'Valeur': '' },
       { 'Métrique': 'Valeur totale offres', 'Valeur': syncedData.analytics?.offerAnalysis?.totalValue?.toFixed(2) || 0 },
@@ -55,6 +71,10 @@ export async function GET(request: NextRequest) {
       { 'Métrique': '=== ANALYSE PROJETS ===', 'Valeur': '' },
       { 'Métrique': 'Projets actifs', 'Valeur': syncedData.analytics?.projectAnalysis?.active || 0 },
       { 'Métrique': 'Projets terminés', 'Valeur': syncedData.analytics?.projectAnalysis?.completed || 0 },
+      { 'Métrique': '', 'Valeur': '' },
+      { 'Métrique': '=== ANALYSE TÂCHES ===', 'Valeur': '' },
+      { 'Métrique': 'Tâches ouvertes', 'Valeur': syncedData.analytics?.taskAnalysis?.openTasks || 0 },
+      { 'Métrique': 'Tâches terminées', 'Valeur': syncedData.analytics?.taskAnalysis?.completedTasks || 0 },
     ]
     const dashboardSheet = XLSX.utils.json_to_sheet(dashboardData)
     XLSX.utils.book_append_sheet(workbook, dashboardSheet, 'Dashboard')
@@ -147,6 +167,94 @@ export async function GET(request: NextRequest) {
       })
       const invoiceAnalysisSheet = XLSX.utils.json_to_sheet(invoiceAnalysisData)
       XLSX.utils.book_append_sheet(workbook, invoiceAnalysisSheet, 'Analyse Factures')
+    }
+
+    // === SHEET 12: NOTES DE CRÉDIT ===
+    if (syncedData.creditNotes && syncedData.creditNotes.length > 0) {
+      const creditNotesData = syncedData.creditNotes.map((cn: any) => {
+        const contact = syncedData.contacts?.find((c: any) => c.id === cn.contact_id)
+        return {
+          'N° Document': cn.document_nr || cn.id,
+          'Date': cn.is_valid_from || cn.created_at,
+          'Client ID': cn.contact_id,
+          'Client': contact?.name_1 || 'Inconnu',
+          'Montant': cn.total || cn.total_gross || 0,
+          'Devise': cn.currency_code || 'CHF',
+          'Statut ID': cn.kb_item_status_id,
+          'Titre': cn.title || ''
+        }
+      })
+      const creditNotesSheet = XLSX.utils.json_to_sheet(creditNotesData)
+      XLSX.utils.book_append_sheet(workbook, creditNotesSheet, 'Notes de Crédit')
+    }
+
+    // === SHEET 13: PAIEMENTS ===
+    if (syncedData.payments && syncedData.payments.length > 0) {
+      const paymentsData = syncedData.payments.map((p: any) => ({
+        'ID': p.id,
+        'Date': p.date || p.created_at,
+        'Montant': p.value || p.amount || 0,
+        'Devise': p.currency_code || 'CHF',
+        'En attente': p.is_open ? 'Oui' : 'Non',
+        'Titre': p.title || '',
+        'Type': p.kb_item_type || 'Autre',
+        'Contact ID': p.contact_id || ''
+      }))
+      const paymentsSheet = XLSX.utils.json_to_sheet(paymentsData)
+      XLSX.utils.book_append_sheet(workbook, paymentsSheet, 'Paiements')
+    }
+
+    // === SHEET 14: DÉPENSES ===
+    if (syncedData.expenses && syncedData.expenses.length > 0) {
+      const expensesData = syncedData.expenses.map((e: any) => ({
+        'ID': e.id,
+        'Date': e.date || e.created_at,
+        'Montant': e.total || e.total_gross || 0,
+        'Devise': e.currency_code || 'CHF',
+        'Fournisseur ID': e.contact_id || '',
+        'Description': e.title || e.text || '',
+        'Catégorie': e.category || '',
+        'Statut ID': e.kb_item_status_id
+      }))
+      const expensesSheet = XLSX.utils.json_to_sheet(expensesData)
+      XLSX.utils.book_append_sheet(workbook, expensesSheet, 'Dépenses')
+    }
+
+    // === SHEET 15: NOTES / COMMUNICATIONS ===
+    if (syncedData.notes && syncedData.notes.length > 0) {
+      const notesData = syncedData.notes.map((n: any) => ({
+        'ID': n.id,
+        'Date': n.date || n.created_at,
+        'Contact ID': n.contact_id || n.subject_id,
+        'Sujet': n.subject || n.title || '',
+        'Contenu': n.info || n.text || '',
+        'Utilisateur ID': n.user_id || '',
+        'Type': n.note_type || n.type || 'Note'
+      }))
+      const notesSheet = XLSX.utils.json_to_sheet(notesData)
+      XLSX.utils.book_append_sheet(workbook, notesSheet, 'Notes')
+    }
+
+    // === SHEET 16: TÂCHES ===
+    if (syncedData.tasks && syncedData.tasks.length > 0) {
+      const tasksData = syncedData.tasks.map((t: any) => {
+        const statusLabel = t.status === 1 ? 'Ouvert' :
+                           t.status === 2 ? 'En cours' :
+                           t.status === 3 ? 'Terminé' : 'Autre'
+        return {
+          'ID': t.id,
+          'Date création': t.created_at,
+          'Date échéance': t.finish_date || t.due_date || '',
+          'Titre': t.subject || t.title || '',
+          'Description': t.info || t.text || '',
+          'Statut': statusLabel,
+          'Statut ID': t.status,
+          'Utilisateur ID': t.user_id || '',
+          'Contact ID': t.contact_id || t.subject_id || ''
+        }
+      })
+      const tasksSheet = XLSX.utils.json_to_sheet(tasksData)
+      XLSX.utils.book_append_sheet(workbook, tasksSheet, 'Tâches')
     }
 
     // Generate Excel file

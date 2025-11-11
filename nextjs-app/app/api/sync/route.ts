@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import axios from 'axios'
+import { BexioAPIClient } from '@/lib/bexioClient'
 import { setSyncedData } from '@/lib/dataStore'
 
+// Interfaces for all Bexio data types
 interface BexioContact {
   id: number
   name_1: string
@@ -29,14 +30,6 @@ interface BexioInvoice {
   payment_type_id?: number
 }
 
-interface BexioProject {
-  id: number
-  name: string
-  pr_state_id: number
-  contact_id?: number
-  pr_project_type_id?: number
-}
-
 interface BexioOffer {
   id: number
   document_nr: string
@@ -59,12 +52,31 @@ interface BexioOrder {
   is_valid_from: string
 }
 
+interface BexioCreditNote {
+  id: number
+  document_nr: string
+  title?: string
+  contact_id?: number
+  total: number
+  total_gross: number
+  kb_item_status_id?: number
+  is_valid_from: string
+}
+
+interface BexioProject {
+  id: number
+  name: string
+  pr_state_id: number
+  contact_id?: number
+  pr_project_type_id?: number
+}
+
 interface BexioTimesheet {
   id: number
   user_id: number
   client_service_id?: number
   text?: string
-  allowable_bill: number
+  allowable_bill: number | boolean
   date: string
   duration: number
 }
@@ -79,6 +91,42 @@ interface BexioArticle {
   stock_nr?: string
 }
 
+interface BexioPayment {
+  id: number
+  title?: string
+  value: number
+  is_open: boolean
+  date: string
+}
+
+interface BexioExpense {
+  id: number
+  user_id: number
+  contact_id?: number
+  total: number
+  currency_id: number
+  document_date: string
+}
+
+interface BexioNote {
+  id: number
+  user_id: number
+  contact_id?: number
+  subject?: string
+  info?: string
+  date: string
+}
+
+interface BexioTask {
+  id: number
+  user_id: number
+  contact_id?: number
+  pr_project_id?: number
+  subject: string
+  status: number
+  finish_date?: string
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -91,50 +139,72 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const headers = {
-      'Accept': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
+    // Create Bexio API client with proper error handling
+    const client = new BexioAPIClient({ apiKey, timeout: 60000 })
+
+    // Verify API key
+    const isValid = await client.healthCheck()
+    if (!isValid) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid Bexio API key' },
+        { status: 401 }
+      )
     }
 
-    // Helper function to safely fetch data
-    const safeFetch = async <T>(url: string, name: string): Promise<T[]> => {
-      try {
-        const response = await axios.get<T[]>(url, {
-          headers,
-          params: { limit: 2000 }
-        })
-        return response.data || []
-      } catch (err: any) {
-        console.log(`${name} endpoint not available or no data:`, err.message)
-        return []
-      }
-    }
+    console.log('✅ Bexio API connection established')
 
-    // Extract all data in parallel for better performance
+    // Extract all data in parallel for maximum performance
+    console.log('📊 Fetching all data from Bexio...')
+
     const [
       contacts,
       invoices,
-      projects,
       offers,
       orders,
+      creditNotes,
+      projects,
       timesheets,
-      articles
+      articles,
+      payments,
+      expenses,
+      notes,
+      tasks
     ] = await Promise.all([
-      safeFetch<BexioContact>('https://api.bexio.com/2.0/contact', 'Contacts'),
-      safeFetch<BexioInvoice>('https://api.bexio.com/2.0/kb_invoice', 'Invoices'),
-      safeFetch<BexioProject>('https://api.bexio.com/2.0/pr_project', 'Projects'),
-      safeFetch<BexioOffer>('https://api.bexio.com/2.0/kb_offer', 'Offers'),
-      safeFetch<BexioOrder>('https://api.bexio.com/2.0/kb_order', 'Orders'),
-      safeFetch<BexioTimesheet>('https://api.bexio.com/2.0/timesheet', 'Timesheets'),
-      safeFetch<BexioArticle>('https://api.bexio.com/2.0/article', 'Articles')
+      client.getContacts().catch(err => { console.log('Contacts error:', err.message); return [] }),
+      client.getInvoices().catch(err => { console.log('Invoices error:', err.message); return [] }),
+      client.getOffers().catch(err => { console.log('Offers error:', err.message); return [] }),
+      client.getOrders().catch(err => { console.log('Orders error:', err.message); return [] }),
+      client.getCreditNotes().catch(err => { console.log('Credit Notes error:', err.message); return [] }),
+      client.getProjects().catch(err => { console.log('Projects error:', err.message); return [] }),
+      client.getTimesheets().catch(err => { console.log('Timesheets error:', err.message); return [] }),
+      client.getArticles().catch(err => { console.log('Articles error:', err.message); return [] }),
+      client.getPayments().catch(err => { console.log('Payments error:', err.message); return [] }),
+      client.getExpenses().catch(err => { console.log('Expenses error:', err.message); return [] }),
+      client.getNotes().catch(err => { console.log('Notes error:', err.message); return [] }),
+      client.getTasks().catch(err => { console.log('Tasks error:', err.message); return [] })
     ])
 
-    // === ANALYSES AVANCÉES ===
+    console.log(`✅ Data extracted:
+      - Contacts: ${contacts.length}
+      - Invoices: ${invoices.length}
+      - Offers: ${offers.length}
+      - Orders: ${orders.length}
+      - Credit Notes: ${creditNotes.length}
+      - Projects: ${projects.length}
+      - Timesheets: ${timesheets.length}
+      - Articles: ${articles.length}
+      - Payments: ${payments.length}
+      - Expenses: ${expenses.length}
+      - Notes: ${notes.length}
+      - Tasks: ${tasks.length}
+    `)
 
-    // 1. Analyse Factures
+    // === ADVANCED ANALYTICS ===
+
+    // 1. Invoice Analysis
     const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.total || inv.total_gross || 0), 0)
-    const invoicesPaid = invoices.filter(inv => inv.kb_item_status_id === 7 || inv.kb_item_status_id === 9) // Payé ou partiellement payé
-    const invoicesPending = invoices.filter(inv => inv.kb_item_status_id === 5 || inv.kb_item_status_id === 6) // Envoyé ou vu
+    const invoicesPaid = invoices.filter(inv => inv.kb_item_status_id === 7 || inv.kb_item_status_id === 9)
+    const invoicesPending = invoices.filter(inv => inv.kb_item_status_id === 5 || inv.kb_item_status_id === 6)
     const invoicesOverdue = invoices.filter(inv => {
       if (!inv.is_valid_until) return false
       const dueDate = new Date(inv.is_valid_until)
@@ -146,21 +216,37 @@ export async function POST(request: NextRequest) {
     const revenueOverdue = invoicesOverdue.reduce((sum, inv) => sum + (inv.total || inv.total_gross || 0), 0)
     const averageInvoice = invoices.length > 0 ? totalRevenue / invoices.length : 0
 
-    // 2. Analyse Offres
+    // 2. Credit Notes Analysis
+    const totalCreditNotes = creditNotes.reduce((sum, cn) => sum + (cn.total || cn.total_gross || 0), 0)
+    const netRevenue = totalRevenue - totalCreditNotes
+
+    // 3. Offer Analysis
     const totalOffers = offers.reduce((sum, off) => sum + (off.total || off.total_gross || 0), 0)
-    const offersAccepted = offers.filter(off => off.kb_item_status_id === 8) // Accepté
+    const offersAccepted = offers.filter(off => off.kb_item_status_id === 8)
     const offersPending = offers.filter(off => off.kb_item_status_id === 5 || off.kb_item_status_id === 6)
     const conversionRate = offers.length > 0 ? (offersAccepted.length / offers.length) * 100 : 0
 
-    // 3. Analyse Commandes
+    // 4. Order Analysis
     const totalOrders = orders.reduce((sum, ord) => sum + (ord.total || ord.total_gross || 0), 0)
 
-    // 4. Analyse Temps
+    // 5. Time Analysis
     const totalHours = timesheets.reduce((sum, ts) => sum + (ts.duration || 0), 0)
-    const billableHours = timesheets.filter(ts => ts.allowable_bill).length
-    const billabilityRate = timesheets.length > 0 ? (billableHours / timesheets.length) * 100 : 0
+    const billableEntries = timesheets.filter(ts => ts.allowable_bill === true || ts.allowable_bill === 1)
+    const billableHours = billableEntries.reduce((sum, ts) => sum + (ts.duration || 0), 0)
+    const billabilityRate = timesheets.length > 0 ? (billableEntries.length / timesheets.length) * 100 : 0
 
-    // 5. Top Clients (par CA)
+    // 6. Payment Analysis
+    const totalPayments = payments.reduce((sum, p) => sum + (p.value || 0), 0)
+    const openPayments = payments.filter(p => p.is_open).reduce((sum, p) => sum + (p.value || 0), 0)
+
+    // 7. Expense Analysis
+    const totalExpenses = expenses.reduce((sum, e) => sum + (e.total || 0), 0)
+
+    // 8. Project Analysis
+    const activeProjects = projects.filter(p => p.pr_state_id === 1 || p.pr_state_id === 2)
+    const completedProjects = projects.filter(p => p.pr_state_id === 3)
+
+    // 9. Top Clients (by revenue)
     const clientRevenue: Record<number, number> = {}
     invoices.forEach(inv => {
       if (inv.contact_id) {
@@ -172,11 +258,11 @@ export async function POST(request: NextRequest) {
       .slice(0, 10)
       .map(([contactId, revenue]) => ({
         contactId: parseInt(contactId),
-        contact: contacts.find(c => c.id === parseInt(contactId)),
+        contact: contacts.find((c: any) => c.id === parseInt(contactId)),
         revenue
       }))
 
-    // 6. Tendances mensuelles (12 derniers mois)
+    // 10. Monthly Trends (last 12 months)
     const monthlyRevenue: Record<string, number> = {}
     invoices.forEach(inv => {
       const date = new Date(inv.is_valid_from)
@@ -188,25 +274,30 @@ export async function POST(request: NextRequest) {
       .slice(-12)
       .map(([month, revenue]) => ({ month, revenue }))
 
-    // 7. Analyse Articles
+    // 11. Article Analysis
     const totalArticlesValue = articles.reduce((sum, art) => sum + ((art.sale_price || 0) * 1), 0)
 
-    // 8. Projets actifs
-    const activeProjects = projects.filter(p => p.pr_state_id === 1 || p.pr_state_id === 2) // Actif ou en cours
-    const completedProjects = projects.filter(p => p.pr_state_id === 3) // Terminé
+    // 12. Task Analysis
+    const openTasks = tasks.filter(t => t.status === 1 || t.status === 2)
+    const completedTasks = tasks.filter(t => t.status === 3)
 
-    // Store data using shared dataStore
+    // Store comprehensive data
     setSyncedData({
       // Raw data
       contacts,
       invoices,
-      projects,
       offers,
       orders,
+      creditNotes,
+      projects,
       timesheets,
       articles,
+      payments,
+      expenses,
+      notes,
+      tasks,
 
-      // Analyses
+      // Analytics
       analytics: {
         invoiceAnalysis: {
           total: invoices.length,
@@ -217,7 +308,9 @@ export async function POST(request: NextRequest) {
           revenuePaid,
           revenuePending,
           revenueOverdue,
-          averageInvoice
+          averageInvoice,
+          netRevenue,
+          totalCreditNotes
         },
         offerAnalysis: {
           total: offers.length,
@@ -232,14 +325,29 @@ export async function POST(request: NextRequest) {
         },
         timeAnalysis: {
           totalHours,
-          totalEntries: timesheets.length,
           billableHours,
+          totalEntries: timesheets.length,
+          billableEntries: billableEntries.length,
           billabilityRate
         },
         projectAnalysis: {
           total: projects.length,
           active: activeProjects.length,
           completed: completedProjects.length
+        },
+        paymentAnalysis: {
+          total: payments.length,
+          totalAmount: totalPayments,
+          openAmount: openPayments
+        },
+        expenseAnalysis: {
+          total: expenses.length,
+          totalAmount: totalExpenses
+        },
+        taskAnalysis: {
+          total: tasks.length,
+          open: openTasks.length,
+          completed: completedTasks.length
         },
         topClients,
         trends,
@@ -253,32 +361,50 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       stats: {
+        // Counts
         contacts: contacts.length,
         invoices: invoices.length,
-        projects: projects.length,
         offers: offers.length,
         orders: orders.length,
+        creditNotes: creditNotes.length,
+        projects: projects.length,
         timesheets: timesheets.length,
         articles: articles.length,
+        payments: payments.length,
+        expenses: expenses.length,
+        notes: notes.length,
+        tasks: tasks.length,
+
+        // Financial KPIs
         totalRevenue,
+        netRevenue,
         revenuePaid,
         revenuePending,
         revenueOverdue,
+        totalCreditNotes,
+        totalPayments,
+        totalExpenses,
+
+        // Operational KPIs
         invoicesPaid: invoicesPaid.length,
         invoicesPending: invoicesPending.length,
         invoicesOverdue: invoicesOverdue.length,
         totalHours,
-        conversionRate,
+        billableHours,
+        conversionRate: conversionRate.toFixed(2),
+        openTasks: openTasks.length,
+
+        // Top performers
         topClientsCount: topClients.length
       },
-      message: 'Synchronisation complète terminée avec succès'
+      message: 'Synchronisation complète réussie - 12 endpoints extraits'
     })
   } catch (error: any) {
-    console.error('Sync API error:', error.response?.data || error.message)
+    console.error('Sync API error:', error)
     return NextResponse.json(
       {
         success: false,
-        error: error.response?.data?.message || error.message || 'Erreur lors de la synchronisation'
+        error: error.message || 'Erreur lors de la synchronisation'
       },
       { status: 500 }
     )
