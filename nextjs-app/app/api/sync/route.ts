@@ -353,9 +353,12 @@ export async function POST(request: NextRequest) {
           revenuePaid,
           revenuePending,
           revenueOverdue,
-          averageInvoice,
-          netRevenue,
-          totalCreditNotes
+          averageInvoice
+        },
+        creditNoteAnalysis: {
+          total: creditNotes.length,
+          totalCreditNotes,
+          netRevenue
         },
         offerAnalysis: {
           total: offers.length,
@@ -382,17 +385,17 @@ export async function POST(request: NextRequest) {
         },
         paymentAnalysis: {
           total: payments.length,
-          totalAmount: totalPayments,
-          openAmount: openPayments
+          totalPayments,
+          openPayments
         },
         expenseAnalysis: {
           total: expenses.length,
-          totalAmount: totalExpenses
+          totalExpenses
         },
         taskAnalysis: {
           total: tasks.length,
-          open: openTasks.length,
-          completed: completedTasks.length
+          openTasks: openTasks.length,
+          completedTasks: completedTasks.length
         },
         topClients,
         trends,
