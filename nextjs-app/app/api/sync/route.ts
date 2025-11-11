@@ -160,12 +160,25 @@ interface BexioTask {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const apiKey = request.headers.get('x-api-key') || body.apiKey
+    let apiKey: string | null = null
+
+    // Try to parse JSON body (might be empty)
+    try {
+      const body = await request.json()
+      apiKey = body.apiKey
+    } catch (jsonError) {
+      // Body is empty or invalid JSON, that's okay
+      console.log('No JSON body provided, checking headers...')
+    }
+
+    // Try to get API key from headers if not in body
+    if (!apiKey) {
+      apiKey = request.headers.get('x-api-key')
+    }
 
     if (!apiKey) {
       return NextResponse.json(
-        { success: false, error: 'API key is required' },
+        { success: false, error: 'API key is required. Please configure your Bexio API key first.' },
         { status: 400 }
       )
     }
