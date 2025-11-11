@@ -18,49 +18,55 @@ interface BexioContact {
 
 interface BexioInvoice {
   id: number
-  document_nr: string
+  document_nr?: string
   title?: string
   contact_id?: number
-  total: number
-  total_gross: number
-  currency_id: number
-  is_valid_from: string
+  total?: number
+  total_gross?: number
+  currency_id?: number
+  currency_code?: string
+  is_valid_from?: string
   is_valid_until?: string
   kb_item_status_id?: number
   payment_type_id?: number
+  created_at?: string
 }
 
 interface BexioOffer {
   id: number
-  document_nr: string
+  document_nr?: string
   title?: string
   contact_id?: number
-  total: number
-  total_gross: number
+  total?: number
+  total_gross?: number
   kb_item_status_id?: number
-  is_valid_from: string
+  is_valid_from?: string
+  created_at?: string
 }
 
 interface BexioOrder {
   id: number
-  document_nr: string
+  document_nr?: string
   title?: string
   contact_id?: number
-  total: number
-  total_gross: number
+  total?: number
+  total_gross?: number
   kb_item_status_id?: number
-  is_valid_from: string
+  is_valid_from?: string
+  created_at?: string
 }
 
 interface BexioCreditNote {
   id: number
-  document_nr: string
+  document_nr?: string
   title?: string
   contact_id?: number
-  total: number
-  total_gross: number
+  total?: number
+  total_gross?: number
   kb_item_status_id?: number
-  is_valid_from: string
+  is_valid_from?: string
+  created_at?: string
+  currency_code?: string
 }
 
 interface BexioProject {
@@ -94,37 +100,62 @@ interface BexioArticle {
 interface BexioPayment {
   id: number
   title?: string
-  value: number
-  is_open: boolean
-  date: string
+  value?: number
+  amount?: number
+  is_open?: boolean
+  date?: string
+  created_at?: string
+  currency_code?: string
+  kb_item_type?: string
+  contact_id?: number
 }
 
 interface BexioExpense {
   id: number
-  user_id: number
+  user_id?: number
   contact_id?: number
-  total: number
-  currency_id: number
-  document_date: string
+  total?: number
+  total_gross?: number
+  currency_id?: number
+  currency_code?: string
+  document_date?: string
+  date?: string
+  created_at?: string
+  title?: string
+  text?: string
+  category?: string
+  kb_item_status_id?: number
 }
 
 interface BexioNote {
   id: number
-  user_id: number
+  user_id?: number
   contact_id?: number
+  subject_id?: number
   subject?: string
+  title?: string
   info?: string
-  date: string
+  text?: string
+  date?: string
+  created_at?: string
+  note_type?: string
+  type?: string
 }
 
 interface BexioTask {
   id: number
-  user_id: number
+  user_id?: number
   contact_id?: number
+  subject_id?: number
   pr_project_id?: number
-  subject: string
-  status: number
+  subject?: string
+  title?: string
+  info?: string
+  text?: string
+  status?: number
   finish_date?: string
+  due_date?: string
+  created_at?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -169,19 +200,32 @@ export async function POST(request: NextRequest) {
       expenses,
       notes,
       tasks
+    ]: [
+      BexioContact[],
+      BexioInvoice[],
+      BexioOffer[],
+      BexioOrder[],
+      BexioCreditNote[],
+      BexioProject[],
+      BexioTimesheet[],
+      BexioArticle[],
+      BexioPayment[],
+      BexioExpense[],
+      BexioNote[],
+      BexioTask[]
     ] = await Promise.all([
-      client.getContacts().catch(err => { console.log('Contacts error:', err.message); return [] }),
-      client.getInvoices().catch(err => { console.log('Invoices error:', err.message); return [] }),
-      client.getOffers().catch(err => { console.log('Offers error:', err.message); return [] }),
-      client.getOrders().catch(err => { console.log('Orders error:', err.message); return [] }),
-      client.getCreditNotes().catch(err => { console.log('Credit Notes error:', err.message); return [] }),
-      client.getProjects().catch(err => { console.log('Projects error:', err.message); return [] }),
-      client.getTimesheets().catch(err => { console.log('Timesheets error:', err.message); return [] }),
-      client.getArticles().catch(err => { console.log('Articles error:', err.message); return [] }),
-      client.getPayments().catch(err => { console.log('Payments error:', err.message); return [] }),
-      client.getExpenses().catch(err => { console.log('Expenses error:', err.message); return [] }),
-      client.getNotes().catch(err => { console.log('Notes error:', err.message); return [] }),
-      client.getTasks().catch(err => { console.log('Tasks error:', err.message); return [] })
+      client.getContacts().catch(err => { console.log('Contacts error:', err.message); return [] as BexioContact[] }),
+      client.getInvoices().catch(err => { console.log('Invoices error:', err.message); return [] as BexioInvoice[] }),
+      client.getOffers().catch(err => { console.log('Offers error:', err.message); return [] as BexioOffer[] }),
+      client.getOrders().catch(err => { console.log('Orders error:', err.message); return [] as BexioOrder[] }),
+      client.getCreditNotes().catch(err => { console.log('Credit Notes error:', err.message); return [] as BexioCreditNote[] }),
+      client.getProjects().catch(err => { console.log('Projects error:', err.message); return [] as BexioProject[] }),
+      client.getTimesheets().catch(err => { console.log('Timesheets error:', err.message); return [] as BexioTimesheet[] }),
+      client.getArticles().catch(err => { console.log('Articles error:', err.message); return [] as BexioArticle[] }),
+      client.getPayments().catch(err => { console.log('Payments error:', err.message); return [] as BexioPayment[] }),
+      client.getExpenses().catch(err => { console.log('Expenses error:', err.message); return [] as BexioExpense[] }),
+      client.getNotes().catch(err => { console.log('Notes error:', err.message); return [] as BexioNote[] }),
+      client.getTasks().catch(err => { console.log('Tasks error:', err.message); return [] as BexioTask[] })
     ])
 
     console.log(`✅ Data extracted:
@@ -265,6 +309,7 @@ export async function POST(request: NextRequest) {
     // 10. Monthly Trends (last 12 months)
     const monthlyRevenue: Record<string, number> = {}
     invoices.forEach(inv => {
+      if (!inv.is_valid_from) return
       const date = new Date(inv.is_valid_from)
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
       monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] || 0) + (inv.total || inv.total_gross || 0)

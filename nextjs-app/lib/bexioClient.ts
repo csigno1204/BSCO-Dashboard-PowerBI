@@ -116,154 +116,154 @@ export class BexioAPIClient {
   }
 
   // === CONTACTS ===
-  async getContacts(params?: PaginationParams) {
+  async getContacts(params?: PaginationParams): Promise<any[]> {
     return this.fetchAllPages('/contact', params?.limit)
   }
 
-  async getContact(id: number) {
+  async getContact(id: number): Promise<any[]> {
     return this.request(`/contact/${id}`)
   }
 
   // === INVOICES (kb_invoice) ===
-  async getInvoices(params?: PaginationParams) {
+  async getInvoices(params?: PaginationParams): Promise<any[]> {
     return this.fetchAllPages('/kb_invoice', params?.limit)
   }
 
-  async getInvoice(id: number) {
+  async getInvoice(id: number): Promise<any[]> {
     return this.request(`/kb_invoice/${id}`)
   }
 
   // === OFFERS (kb_offer) ===
-  async getOffers(params?: PaginationParams) {
+  async getOffers(params?: PaginationParams): Promise<any[]> {
     return this.fetchAllPages('/kb_offer', params?.limit)
   }
 
-  async getOffer(id: number) {
+  async getOffer(id: number): Promise<any[]> {
     return this.request(`/kb_offer/${id}`)
   }
 
   // === ORDERS (kb_order) ===
-  async getOrders(params?: PaginationParams) {
+  async getOrders(params?: PaginationParams): Promise<any[]> {
     return this.fetchAllPages('/kb_order', params?.limit)
   }
 
-  async getOrder(id: number) {
+  async getOrder(id: number): Promise<any[]> {
     return this.request(`/kb_order/${id}`)
   }
 
   // === CREDIT NOTES (kb_credit_note) ===
-  async getCreditNotes(params?: PaginationParams) {
+  async getCreditNotes(params?: PaginationParams): Promise<any[]> {
     return this.fetchAllPages('/kb_credit_note', params?.limit)
   }
 
-  async getCreditNote(id: number) {
+  async getCreditNote(id: number): Promise<any[]> {
     return this.request(`/kb_credit_note/${id}`)
   }
 
   // === PROJECTS (pr_project) ===
-  async getProjects(params?: PaginationParams) {
+  async getProjects(params?: PaginationParams): Promise<any[]> {
     return this.fetchAllPages('/pr_project', params?.limit)
   }
 
-  async getProject(id: number) {
+  async getProject(id: number): Promise<any[]> {
     return this.request(`/pr_project/${id}`)
   }
 
   // === TIMESHEETS ===
-  async getTimesheets(params?: PaginationParams) {
+  async getTimesheets(params?: PaginationParams): Promise<any[]> {
     return this.fetchAllPages('/timesheet', params?.limit)
   }
 
-  async getTimesheet(id: number) {
+  async getTimesheet(id: number): Promise<any[]> {
     return this.request(`/timesheet/${id}`)
   }
 
   // === ARTICLES / PRODUCTS ===
-  async getArticles(params?: PaginationParams) {
+  async getArticles(params?: PaginationParams): Promise<any[]> {
     return this.fetchAllPages('/article', params?.limit)
   }
 
-  async getArticle(id: number) {
+  async getArticle(id: number): Promise<any[]> {
     return this.request(`/article/${id}`)
   }
 
   // === PAYMENTS (banking_payment) ===
-  async getPayments(params?: PaginationParams) {
+  async getPayments(params?: PaginationParams): Promise<any[]> {
     return this.fetchAllPages('/banking_payment', params?.limit)
   }
 
-  async getPayment(id: number) {
+  async getPayment(id: number): Promise<any[]> {
     return this.request(`/banking_payment/${id}`)
   }
 
   // === EXPENSES ===
-  async getExpenses(params?: PaginationParams) {
+  async getExpenses(params?: PaginationParams): Promise<any[]> {
     return this.fetchAllPages('/expense', params?.limit)
   }
 
-  async getExpense(id: number) {
+  async getExpense(id: number): Promise<any[]> {
     return this.request(`/expense/${id}`)
   }
 
   // === NOTES / COMMUNICATIONS ===
-  async getNotes(params?: PaginationParams) {
+  async getNotes(params?: PaginationParams): Promise<any[]> {
     return this.fetchAllPages('/note', params?.limit)
   }
 
-  async getNote(id: number) {
+  async getNote(id: number): Promise<any[]> {
     return this.request(`/note/${id}`)
   }
 
   // === TASKS ===
-  async getTasks(params?: PaginationParams) {
+  async getTasks(params?: PaginationParams): Promise<any[]> {
     return this.fetchAllPages('/task', params?.limit)
   }
 
-  async getTask(id: number) {
+  async getTask(id: number): Promise<any[]> {
     return this.request(`/task/${id}`)
   }
 
   // === ACCOUNTS (chart of accounts) ===
-  async getAccounts(params?: PaginationParams) {
+  async getAccounts(params?: PaginationParams): Promise<any[]> {
     return this.fetchAllPages('/account', params?.limit)
   }
 
-  async getAccount(id: number) {
+  async getAccount(id: number): Promise<any[]> {
     return this.request(`/account/${id}`)
   }
 
   // === CURRENCIES ===
-  async getCurrencies() {
+  async getCurrencies(): Promise<any[]> {
     return this.request('/currency')
   }
 
   // === COUNTRIES ===
-  async getCountries() {
+  async getCountries(): Promise<any[]> {
     return this.request('/country')
   }
 
   // === PAYMENT TYPES ===
-  async getPaymentTypes() {
+  async getPaymentTypes(): Promise<any[]> {
     return this.request('/payment_type')
   }
 
   // === UNITS ===
-  async getUnits() {
+  async getUnits(): Promise<any[]> {
     return this.request('/unit')
   }
 
   // === TAXES ===
-  async getTaxes() {
+  async getTaxes(): Promise<any[]> {
     return this.request('/tax')
   }
 
   // === USERS ===
-  async getUsers() {
+  async getUsers(): Promise<any[]> {
     return this.request('/user')
   }
 
   // === COMPANY PROFILE ===
-  async getCompanyProfile() {
+  async getCompanyProfile(): Promise<any[]> {
     return this.request('/company_profile')
   }
 
