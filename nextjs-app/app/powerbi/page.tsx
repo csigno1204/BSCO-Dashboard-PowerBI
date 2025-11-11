@@ -31,7 +31,7 @@ export default function PowerBI() {
               : 'text-gray-600 hover:text-primary'
           }`}
         >
-          📊 Template .pbix
+          📊 Templates .pbit
         </button>
         <button
           onClick={() => setActiveTab('tips')}
@@ -294,6 +294,55 @@ export default function PowerBI() {
             <p className="text-gray-700 mb-6">
               Téléchargez nos templates et configurations pré-configurés pour démarrer rapidement avec vos données Bexio.
             </p>
+
+            {/* Template .pbit - NOUVEAU */}
+            <div className="bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 text-white p-8 rounded-xl mb-6 shadow-2xl">
+              <div className="flex items-start gap-4 mb-4">
+                <span className="text-5xl">📊</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-2xl font-bold">Template Power BI (.pbit)</h3>
+                    <span className="bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">NOUVEAU</span>
+                  </div>
+                  <p className="text-lg opacity-95 mb-4">
+                    Fichier template Power BI prêt à l'emploi - Ouvrez directement dans Power BI Desktop !
+                  </p>
+                </div>
+              </div>
+              <ul className="space-y-2 mb-6 ml-16">
+                <li className="flex items-center gap-2">
+                  <span className="text-green-300 font-bold">✓</span>
+                  <span>Modèle de données pré-configuré (4 tables + relations)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-300 font-bold">✓</span>
+                  <span>8 mesures DAX essentielles incluses</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-300 font-bold">✓</span>
+                  <span>Structure de rapport prête pour vos visualisations</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-300 font-bold">✓</span>
+                  <span>Connexion Excel automatique (il suffit de pointer vers votre fichier)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-300 font-bold">✓</span>
+                  <span>Compatible avec toutes les données Bexio synchronisées</span>
+                </li>
+              </ul>
+              <button
+                onClick={() => window.open('/api/powerbi-template?type=pbit', '_blank')}
+                className="w-full bg-white text-purple-600 hover:bg-gray-50 px-8 py-5 rounded-xl transition-all transform hover:scale-105 font-bold text-xl flex items-center justify-center gap-3 shadow-xl"
+              >
+                <span className="text-3xl">⬇️</span>
+                Télécharger le Template .pbit
+                <span className="text-sm font-normal opacity-75">(Ouvrir dans Power BI Desktop)</span>
+              </button>
+              <p className="text-center text-sm opacity-80 mt-3">
+                📌 Après téléchargement : Double-cliquez sur le fichier .pbit et pointez vers votre Excel synchronisé
+              </p>
+            </div>
 
             {/* Pack Complet */}
             <div className="bg-gradient-to-r from-primary to-secondary text-white p-6 rounded-lg mb-6">
