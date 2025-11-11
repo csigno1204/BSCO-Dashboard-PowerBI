@@ -20,8 +20,15 @@ export default function SyncPage() {
     startSync()
 
     try {
-      // Call the sync API
-      const response = await axios.post('/api/sync')
+      // Get API key from localStorage
+      const apiKey = typeof window !== 'undefined' ? localStorage.getItem('bexio_api_key') : null
+
+      if (!apiKey) {
+        throw new Error('API key not found. Please configure your Bexio API key.')
+      }
+
+      // Call the sync API with API key in body
+      const response = await axios.post('/api/sync', { apiKey })
 
       if (response.data.success) {
         // Update stats
