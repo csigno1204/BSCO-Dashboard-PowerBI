@@ -295,52 +295,52 @@ export default function PowerBI() {
               Téléchargez nos templates et configurations pré-configurés pour démarrer rapidement avec vos données Bexio.
             </p>
 
-            {/* Template .pbit - NOUVEAU */}
+            {/* Template Power Query - NOUVEAU */}
             <div className="bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 text-white p-8 rounded-xl mb-6 shadow-2xl">
               <div className="flex items-start gap-4 mb-4">
-                <span className="text-5xl">📊</span>
+                <span className="text-5xl">⚡</span>
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-2xl font-bold">Template Power BI (.pbit)</h3>
-                    <span className="bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">NOUVEAU</span>
+                    <h3 className="text-2xl font-bold">Template Power Query (.pq)</h3>
+                    <span className="bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">FACILE</span>
                   </div>
                   <p className="text-lg opacity-95 mb-4">
-                    Fichier template Power BI prêt à l'emploi - Ouvrez directement dans Power BI Desktop !
+                    Script Power Query prêt à copier-coller - Importez toutes vos données en 2 minutes !
                   </p>
                 </div>
               </div>
               <ul className="space-y-2 mb-6 ml-16">
                 <li className="flex items-center gap-2">
                   <span className="text-green-300 font-bold">✓</span>
-                  <span>Modèle de données pré-configuré (4 tables + relations)</span>
+                  <span>Importe automatiquement les 15 feuilles Excel en une fois</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="text-green-300 font-bold">✓</span>
-                  <span>8 mesures DAX essentielles incluses</span>
+                  <span>Script Power Query M langue prêt à l'emploi</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="text-green-300 font-bold">✓</span>
-                  <span>Structure de rapport prête pour vos visualisations</span>
+                  <span>20+ mesures DAX incluses avec formules complètes</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="text-green-300 font-bold">✓</span>
-                  <span>Connexion Excel automatique (il suffit de pointer vers votre fichier)</span>
+                  <span>Instructions pour créer 7 relations entre tables</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="text-green-300 font-bold">✓</span>
-                  <span>Compatible avec toutes les données Bexio synchronisées</span>
+                  <span>Fonctionne avec toutes les données Bexio synchronisées</span>
                 </li>
               </ul>
               <button
-                onClick={() => window.open('/api/powerbi-template?type=pbit', '_blank')}
+                onClick={() => window.open('/api/powerbi-template?type=powerquery', '_blank')}
                 className="w-full bg-white text-purple-600 hover:bg-gray-50 px-8 py-5 rounded-xl transition-all transform hover:scale-105 font-bold text-xl flex items-center justify-center gap-3 shadow-xl"
               >
                 <span className="text-3xl">⬇️</span>
-                Télécharger le Template .pbit
-                <span className="text-sm font-normal opacity-75">(Ouvrir dans Power BI Desktop)</span>
+                Télécharger le Script Power Query
+                <span className="text-sm font-normal opacity-75">(Copier-coller dans Power BI)</span>
               </button>
               <p className="text-center text-sm opacity-80 mt-3">
-                📌 Après téléchargement : Double-cliquez sur le fichier .pbit et pointez vers votre Excel synchronisé
+                📌 Mode d'emploi : Ouvrez Power BI → Obtenir les données → Requête vide → Éditeur Avancé → Collez le script
               </p>
             </div>
 
