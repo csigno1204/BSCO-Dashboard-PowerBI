@@ -191,7 +191,7 @@ export default function Dashboard() {
           </div>
 
           {/* Secondary KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
             <div className="bg-white rounded-xl p-4 shadow-md text-center hover:shadow-lg transition-all">
               <div className="text-2xl mb-2">📊</div>
               <div className="text-2xl font-bold text-gray-800">{formatNumber(stats.offers || 0)}</div>
@@ -221,6 +221,157 @@ export default function Dashboard() {
               <div className="text-2xl mb-2">✅</div>
               <div className="text-2xl font-bold text-gray-800">{formatNumber(stats.tasks || 0)}</div>
               <div className="text-xs text-gray-600">Tâches</div>
+            </div>
+          </div>
+
+          {/* Financial Health Overview */}
+          {(stats.grossProfit !== undefined || stats.netRevenue !== undefined) && (
+            <>
+              <h3 className="text-2xl font-bold text-gray-800 mb-4 mt-8 flex items-center gap-2">
+                <span>💼</span>
+                Santé Financière
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                {stats.netRevenue !== undefined && (
+                  <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl p-5 shadow-lg">
+                    <div className="text-xs opacity-75 uppercase tracking-wide mb-2">CA Net</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats.netRevenue)}</div>
+                    <div className="text-xs opacity-75 mt-1">Après notes de crédit</div>
+                  </div>
+                )}
+                {stats.grossProfit !== undefined && (
+                  <div className={`rounded-xl p-5 shadow-lg text-white ${(stats.grossProfit || 0) >= 0 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600' : 'bg-gradient-to-br from-red-500 to-red-600'}`}>
+                    <div className="text-xs opacity-75 uppercase tracking-wide mb-2">Résultat Brut</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats.grossProfit)}</div>
+                    {stats.profitMargin !== undefined && (
+                      <div className="text-xs opacity-75 mt-1">Marge: {stats.profitMargin.toFixed(1)}%</div>
+                    )}
+                  </div>
+                )}
+                {stats.cashFlow !== undefined && (
+                  <div className={`rounded-xl p-5 shadow-lg text-white ${(stats.cashFlow || 0) >= 0 ? 'bg-gradient-to-br from-teal-500 to-teal-600' : 'bg-gradient-to-br from-orange-500 to-orange-600'}`}>
+                    <div className="text-xs opacity-75 uppercase tracking-wide mb-2">Cash Flow</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats.cashFlow)}</div>
+                    <div className="text-xs opacity-75 mt-1">Paiements - Dépenses</div>
+                  </div>
+                )}
+                {stats.totalExpenses !== undefined && (
+                  <div className="bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-xl p-5 shadow-lg">
+                    <div className="text-xs opacity-75 uppercase tracking-wide mb-2">Dépenses Totales</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats.totalExpenses)}</div>
+                    {stats.averageExpense !== undefined && (
+                      <div className="text-xs opacity-75 mt-1">Moy: {formatCurrency(stats.averageExpense)}</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* Invoice Status Breakdown */}
+          {stats.invoices > 0 && (stats.invoicesPaid !== undefined || stats.invoicesValid !== undefined) && (
+            <>
+              <h3 className="text-2xl font-bold text-gray-800 mb-4 mt-8 flex items-center gap-2">
+                <span>📄</span>
+                État des Factures
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+                {stats.invoicesValid !== undefined && (
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg p-4 text-center shadow-md">
+                    <div className="text-xs opacity-75 uppercase mb-1">Valides</div>
+                    <div className="text-2xl font-bold">{formatNumber(stats.invoicesValid)}</div>
+                  </div>
+                )}
+                {stats.invoicesPaid !== undefined && (
+                  <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg p-4 text-center shadow-md">
+                    <div className="text-xs opacity-75 uppercase mb-1">Payées</div>
+                    <div className="text-2xl font-bold">{formatNumber(stats.invoicesPaid)}</div>
+                  </div>
+                )}
+                {stats.invoicesPartiallyPaid !== undefined && (
+                  <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-lg p-4 text-center shadow-md">
+                    <div className="text-xs opacity-75 uppercase mb-1">Part. Payées</div>
+                    <div className="text-2xl font-bold">{formatNumber(stats.invoicesPartiallyPaid)}</div>
+                  </div>
+                )}
+                {stats.invoicesPending !== undefined && (
+                  <div className="bg-gradient-to-br from-blue-400 to-blue-500 text-white rounded-lg p-4 text-center shadow-md">
+                    <div className="text-xs opacity-75 uppercase mb-1">En Attente</div>
+                    <div className="text-2xl font-bold">{formatNumber(stats.invoicesPending)}</div>
+                  </div>
+                )}
+                {stats.invoicesOverdue !== undefined && (
+                  <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-lg p-4 text-center shadow-md">
+                    <div className="text-xs opacity-75 uppercase mb-1">En Retard</div>
+                    <div className="text-2xl font-bold">{formatNumber(stats.invoicesOverdue)}</div>
+                  </div>
+                )}
+                {stats.invoicesDraft !== undefined && (
+                  <div className="bg-white border-2 border-gray-300 rounded-lg p-4 text-center shadow-md">
+                    <div className="text-xs text-gray-500 uppercase mb-1">Brouillons</div>
+                    <div className="text-2xl font-bold text-gray-700">{formatNumber(stats.invoicesDraft)}</div>
+                  </div>
+                )}
+                {stats.invoicesCancelled !== undefined && (
+                  <div className="bg-white border-2 border-red-300 rounded-lg p-4 text-center shadow-md">
+                    <div className="text-xs text-gray-500 uppercase mb-1">Annulées</div>
+                    <div className="text-2xl font-bold text-gray-700">{formatNumber(stats.invoicesCancelled)}</div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* Revenue Breakdown */}
+          {(stats.revenuePaid !== undefined || stats.revenuePartiallyPaid !== undefined) && (
+            <>
+              <h3 className="text-2xl font-bold text-gray-800 mb-4 mt-8 flex items-center gap-2">
+                <span>💵</span>
+                Répartition du Chiffre d'Affaires
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                {stats.revenuePaid !== undefined && (
+                  <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-5 shadow-lg">
+                    <div className="text-xs opacity-75 uppercase tracking-wide mb-2">CA Payé</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats.revenuePaid)}</div>
+                  </div>
+                )}
+                {stats.revenuePartiallyPaid !== undefined && (
+                  <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-xl p-5 shadow-lg">
+                    <div className="text-xs opacity-75 uppercase tracking-wide mb-2">CA Part. Payé</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats.revenuePartiallyPaid)}</div>
+                  </div>
+                )}
+                {stats.revenuePending !== undefined && (
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-5 shadow-lg">
+                    <div className="text-xs opacity-75 uppercase tracking-wide mb-2">CA En Attente</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats.revenuePending)}</div>
+                  </div>
+                )}
+                {stats.revenueOverdue !== undefined && (
+                  <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl p-5 shadow-lg">
+                    <div className="text-xs opacity-75 uppercase tracking-wide mb-2">CA En Retard</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats.revenueOverdue)}</div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* Quick Actions */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mt-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Besoin de plus de détails ?</h3>
+                <p className="text-gray-600">Consultez la page de synchronisation pour une analyse complète et détaillée</p>
+              </div>
+              <Link
+                href="/sync"
+                className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md"
+              >
+                <span>📊</span>
+                Voir l'analyse complète
+              </Link>
             </div>
           </div>
         </div>

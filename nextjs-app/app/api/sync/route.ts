@@ -258,46 +258,63 @@ export async function POST(request: NextRequest) {
 
     // === ADVANCED ANALYTICS ===
 
-    // 1. Invoice Analysis
-    const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.total || inv.total_gross || 0), 0)
-    const invoicesPaid = invoices.filter(inv => inv.kb_item_status_id === 7 || inv.kb_item_status_id === 9)
-    const invoicesPending = invoices.filter(inv => inv.kb_item_status_id === 5 || inv.kb_item_status_id === 6)
-    const invoicesOverdue = invoices.filter(inv => {
+    // 1. Invoice Analysis - CORRECTED: Only count valid invoices (not drafts)
+    // Status IDs: 1-4 = drafts/in progress, 5-6 = sent/pending, 7 = paid, 9 = partially paid, 11 = cancelled
+    const validInvoices = invoices.filter(inv => (inv.kb_item_status_id || 0) >= 5 && inv.kb_item_status_id !== 11)
+
+    const totalRevenue = validInvoices.reduce((sum, inv) => sum + (inv.total || inv.total_gross || 0), 0)
+    const invoicesPaid = validInvoices.filter(inv => inv.kb_item_status_id === 7)
+    const invoicesPartiallyPaid = validInvoices.filter(inv => inv.kb_item_status_id === 9)
+    const invoicesPending = validInvoices.filter(inv => inv.kb_item_status_id === 5 || inv.kb_item_status_id === 6)
+    const invoicesDraft = invoices.filter(inv => (inv.kb_item_status_id || 0) < 5)
+    const invoicesCancelled = invoices.filter(inv => inv.kb_item_status_id === 11)
+    const invoicesOverdue = validInvoices.filter(inv => {
       if (!inv.is_valid_until) return false
       const dueDate = new Date(inv.is_valid_until)
       return dueDate < new Date() && (inv.kb_item_status_id !== 7 && inv.kb_item_status_id !== 9)
     })
 
     const revenuePaid = invoicesPaid.reduce((sum, inv) => sum + (inv.total || inv.total_gross || 0), 0)
+    const revenuePartiallyPaid = invoicesPartiallyPaid.reduce((sum, inv) => sum + (inv.total || inv.total_gross || 0), 0)
     const revenuePending = invoicesPending.reduce((sum, inv) => sum + (inv.total || inv.total_gross || 0), 0)
     const revenueOverdue = invoicesOverdue.reduce((sum, inv) => sum + (inv.total || inv.total_gross || 0), 0)
-    const averageInvoice = invoices.length > 0 ? totalRevenue / invoices.length : 0
+    const averageInvoice = validInvoices.length > 0 ? totalRevenue / validInvoices.length : 0
 
     // 2. Credit Notes Analysis
     const totalCreditNotes = creditNotes.reduce((sum, cn) => sum + (cn.total || cn.total_gross || 0), 0)
     const netRevenue = totalRevenue - totalCreditNotes
 
-    // 3. Offer Analysis
+    // 3. Offer Analysis - ENRICHED
     const totalOffers = offers.reduce((sum, off) => sum + (off.total || off.total_gross || 0), 0)
-    const offersAccepted = offers.filter(off => off.kb_item_status_id === 8)
+    const offersAccepted = offers.filter(off => off.kb_item_status_id === 8) // Status 8 = accepted
+    const offersRejected = offers.filter(off => off.kb_item_status_id === 9 || off.kb_item_status_id === 10)
     const offersPending = offers.filter(off => off.kb_item_status_id === 5 || off.kb_item_status_id === 6)
+    const offersDraft = offers.filter(off => (off.kb_item_status_id || 0) < 5)
     const conversionRate = offers.length > 0 ? (offersAccepted.length / offers.length) * 100 : 0
+    const acceptedOffersValue = offersAccepted.reduce((sum, off) => sum + (off.total || off.total_gross || 0), 0)
 
     // 4. Order Analysis
     const totalOrders = orders.reduce((sum, ord) => sum + (ord.total || ord.total_gross || 0), 0)
 
-    // 5. Time Analysis
+    // 5. Time Analysis - ENRICHED
     const totalHours = timesheets.reduce((sum, ts) => sum + (ts.duration || 0), 0)
     const billableEntries = timesheets.filter(ts => ts.allowable_bill === true || ts.allowable_bill === 1)
+    const nonBillableEntries = timesheets.filter(ts => ts.allowable_bill === false || ts.allowable_bill === 0)
     const billableHours = billableEntries.reduce((sum, ts) => sum + (ts.duration || 0), 0)
+    const nonBillableHours = nonBillableEntries.reduce((sum, ts) => sum + (ts.duration || 0), 0)
     const billabilityRate = timesheets.length > 0 ? (billableEntries.length / timesheets.length) * 100 : 0
+    const averageHoursPerEntry = timesheets.length > 0 ? totalHours / timesheets.length : 0
 
-    // 6. Payment Analysis
-    const totalPayments = payments.reduce((sum, p) => sum + (p.value || 0), 0)
-    const openPayments = payments.filter(p => p.is_open).reduce((sum, p) => sum + (p.value || 0), 0)
+    // 6. Payment Analysis - ENRICHED
+    const totalPayments = payments.reduce((sum, p) => sum + (p.value || p.amount || 0), 0)
+    const openPayments = payments.filter(p => p.is_open).reduce((sum, p) => sum + (p.value || p.amount || 0), 0)
+    const closedPayments = totalPayments - openPayments
+    const paymentsReceived = payments.filter(p => !p.is_open).length
+    const paymentsOutstanding = payments.filter(p => p.is_open).length
 
-    // 7. Expense Analysis
-    const totalExpenses = expenses.reduce((sum, e) => sum + (e.total || 0), 0)
+    // 7. Expense Analysis - ENRICHED
+    const totalExpenses = expenses.reduce((sum, e) => sum + (e.total || e.total_gross || 0), 0)
+    const averageExpense = expenses.length > 0 ? totalExpenses / expenses.length : 0
 
     // 8. Project Analysis
     const activeProjects = projects.filter(p => p.pr_state_id === 1 || p.pr_state_id === 2)
@@ -355,15 +372,20 @@ export async function POST(request: NextRequest) {
       notes,
       tasks,
 
-      // Analytics
+      // Analytics - ENRICHED WITH MUCH MORE DETAIL
       analytics: {
         invoiceAnalysis: {
           total: invoices.length,
+          valid: validInvoices.length,
           paid: invoicesPaid.length,
+          partiallyPaid: invoicesPartiallyPaid.length,
           pending: invoicesPending.length,
           overdue: invoicesOverdue.length,
+          draft: invoicesDraft.length,
+          cancelled: invoicesCancelled.length,
           totalRevenue,
           revenuePaid,
+          revenuePartiallyPaid,
           revenuePending,
           revenueOverdue,
           averageInvoice
@@ -376,8 +398,11 @@ export async function POST(request: NextRequest) {
         offerAnalysis: {
           total: offers.length,
           accepted: offersAccepted.length,
+          rejected: offersRejected.length,
           pending: offersPending.length,
+          draft: offersDraft.length,
           totalValue: totalOffers,
+          acceptedValue: acceptedOffersValue,
           conversionRate
         },
         orderAnalysis: {
@@ -387,9 +412,12 @@ export async function POST(request: NextRequest) {
         timeAnalysis: {
           totalHours,
           billableHours,
+          nonBillableHours,
           totalEntries: timesheets.length,
           billableEntries: billableEntries.length,
-          billabilityRate
+          nonBillableEntries: nonBillableEntries.length,
+          billabilityRate,
+          averageHoursPerEntry
         },
         projectAnalysis: {
           total: projects.length,
@@ -398,12 +426,16 @@ export async function POST(request: NextRequest) {
         },
         paymentAnalysis: {
           total: payments.length,
+          received: paymentsReceived,
+          outstanding: paymentsOutstanding,
           totalPayments,
+          closedPayments,
           openPayments
         },
         expenseAnalysis: {
           total: expenses.length,
-          totalExpenses
+          totalExpenses,
+          averageExpense
         },
         taskAnalysis: {
           total: tasks.length,
@@ -418,11 +450,16 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString()
     })
 
-    // Return comprehensive stats
+    // Calculate financial analysis
+    const grossProfit = netRevenue - totalExpenses
+    const profitMargin = netRevenue > 0 ? (grossProfit / netRevenue) * 100 : 0
+    const cashFlow = totalPayments - totalExpenses
+
+    // Return comprehensive stats with MUCH MORE DETAIL
     return NextResponse.json({
       success: true,
       stats: {
-        // Counts
+        // ========== BASIC COUNTS ==========
         contacts: contacts.length,
         invoices: invoices.length,
         offers: offers.length,
@@ -436,29 +473,77 @@ export async function POST(request: NextRequest) {
         notes: notes.length,
         tasks: tasks.length,
 
-        // Financial KPIs
-        totalRevenue,
-        netRevenue,
-        revenuePaid,
-        revenuePending,
-        revenueOverdue,
-        totalCreditNotes,
-        totalPayments,
-        totalExpenses,
-
-        // Operational KPIs
+        // ========== INVOICE DETAILS ==========
+        invoicesValid: validInvoices.length,
         invoicesPaid: invoicesPaid.length,
+        invoicesPartiallyPaid: invoicesPartiallyPaid.length,
         invoicesPending: invoicesPending.length,
         invoicesOverdue: invoicesOverdue.length,
+        invoicesDraft: invoicesDraft.length,
+        invoicesCancelled: invoicesCancelled.length,
+
+        // ========== REVENUE DETAILS (CORRECTED) ==========
+        totalRevenue, // Only valid invoices (not drafts)
+        revenuePaid,
+        revenuePartiallyPaid,
+        revenuePending,
+        revenueOverdue,
+        averageInvoice,
+
+        // ========== NET REVENUE & PROFITABILITY ==========
+        totalCreditNotes,
+        netRevenue, // Revenue after credit notes
+        totalExpenses,
+        grossProfit, // Net revenue - expenses
+        profitMargin, // Profit margin percentage
+
+        // ========== CASH FLOW ==========
+        totalPayments, // Payments received
+        closedPayments, // Closed payments
+        openPayments, // Outstanding payments
+        paymentsReceived,
+        paymentsOutstanding,
+        cashFlow, // Payments - Expenses
+
+        // ========== OFFERS DETAILS ==========
+        offersAccepted: offersAccepted.length,
+        offersRejected: offersRejected.length,
+        offersPending: offersPending.length,
+        offersDraft: offersDraft.length,
+        totalOffersValue: totalOffers,
+        acceptedOffersValue,
+        conversionRate: parseFloat(conversionRate.toFixed(2)),
+
+        // ========== ORDERS DETAILS ==========
+        totalOrdersValue: totalOrders,
+
+        // ========== TIME TRACKING ==========
         totalHours,
         billableHours,
-        conversionRate: conversionRate.toFixed(2),
-        openTasks: openTasks.length,
+        nonBillableHours,
+        billableEntries: billableEntries.length,
+        nonBillableEntries: nonBillableEntries.length,
+        billabilityRate: parseFloat(billabilityRate.toFixed(2)),
+        averageHoursPerEntry: parseFloat(averageHoursPerEntry.toFixed(2)),
 
-        // Top performers
-        topClientsCount: topClients.length
+        // ========== PROJECTS ==========
+        projectsActive: activeProjects.length,
+        projectsCompleted: completedProjects.length,
+
+        // ========== TASKS ==========
+        tasksOpen: openTasks.length,
+        tasksCompleted: completedTasks.length,
+
+        // ========== EXPENSES ==========
+        averageExpense,
+
+        // ========== TOP PERFORMERS ==========
+        topClientsCount: topClients.length,
+
+        // ========== ARTICLES ==========
+        articlesValue: totalArticlesValue
       },
-      message: 'Synchronisation complète réussie - 12 endpoints extraits'
+      message: 'Synchronisation complète réussie - 12 endpoints extraits avec analyse détaillée'
     })
   } catch (error: any) {
     console.error('Sync API error:', error)

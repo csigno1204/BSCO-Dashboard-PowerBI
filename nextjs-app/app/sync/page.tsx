@@ -181,35 +181,268 @@ export default function SyncPage() {
           </div>
         </div>
 
-        {/* KPIs Financiers */}
+        {/* ANALYSE DÉTAILLÉE - NOUVEAU */}
         {stats.totalRevenue > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">💰 Indicateurs Financiers</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-lg shadow-lg">
-                <div className="text-sm opacity-90 mb-1">CA Total</div>
-                <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue || 0)}</div>
+          <div className="mb-8 space-y-6">
+            <div className="border-t-4 border-primary pt-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                <span>📈</span>
+                Analyse Détaillée de Vos Données
+              </h2>
+
+              {/* 1. ANALYSE DES FACTURES */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span>📄</span>
+                  Analyse des Factures
+                </h3>
+
+                {/* Statuts Factures */}
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">
+                  <div className="bg-white p-4 rounded-lg border-2 border-green-300 text-center">
+                    <div className="text-sm text-gray-600 mb-1">Payées</div>
+                    <div className="text-2xl font-bold text-green-600">{formatNumber(stats.invoicesPaid || 0)}</div>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg border-2 border-yellow-300 text-center">
+                    <div className="text-sm text-gray-600 mb-1">Part. Payées</div>
+                    <div className="text-2xl font-bold text-yellow-600">{formatNumber(stats.invoicesPartiallyPaid || 0)}</div>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg border-2 border-blue-300 text-center">
+                    <div className="text-sm text-gray-600 mb-1">En Attente</div>
+                    <div className="text-2xl font-bold text-blue-600">{formatNumber(stats.invoicesPending || 0)}</div>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg border-2 border-red-300 text-center">
+                    <div className="text-sm text-gray-600 mb-1">En Retard</div>
+                    <div className="text-2xl font-bold text-red-600">{formatNumber(stats.invoicesOverdue || 0)}</div>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg border-2 border-gray-300 text-center">
+                    <div className="text-sm text-gray-600 mb-1">Brouillons</div>
+                    <div className="text-2xl font-bold text-gray-600">{formatNumber(stats.invoicesDraft || 0)}</div>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg border-2 border-gray-400 text-center">
+                    <div className="text-sm text-gray-600 mb-1">Annulées</div>
+                    <div className="text-2xl font-bold text-gray-700">{formatNumber(stats.invoicesCancelled || 0)}</div>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg border-2 border-indigo-300 text-center">
+                    <div className="text-sm text-gray-600 mb-1">Valides</div>
+                    <div className="text-2xl font-bold text-indigo-600">{formatNumber(stats.invoicesValid || 0)}</div>
+                  </div>
+                </div>
+
+                {/* Montants Factures */}
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-lg">
+                    <div className="text-sm opacity-90 mb-1">CA Total Validé</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
+                    <div className="text-xs opacity-75 mt-1">Factures valides uniquement</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-lg">
+                    <div className="text-sm opacity-90 mb-1">CA Payé</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats.revenuePaid || 0)}</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-4 rounded-lg">
+                    <div className="text-sm opacity-90 mb-1">CA Part. Payé</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats.revenuePartiallyPaid || 0)}</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-lg">
+                    <div className="text-sm opacity-90 mb-1">CA En Attente</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats.revenuePending || 0)}</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-lg">
+                    <div className="text-sm opacity-90 mb-1">CA En Retard</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats.revenueOverdue || 0)}</div>
+                  </div>
+                </div>
+
+                <div className="mt-3 bg-white p-4 rounded-lg border border-gray-300">
+                  <div className="text-sm text-gray-600">Facture Moyenne</div>
+                  <div className="text-xl font-bold text-gray-800">{formatCurrency(stats.averageInvoice || 0)}</div>
+                </div>
               </div>
 
-              {stats.netRevenue && (
-                <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-lg shadow-lg">
-                  <div className="text-sm opacity-90 mb-1">CA Net</div>
-                  <div className="text-2xl font-bold">{formatCurrency(stats.netRevenue)}</div>
-                  <div className="text-xs opacity-75 mt-1">Après notes crédit</div>
+              {/* 2. ANALYSE RENTABILITÉ & PROFITABILITÉ */}
+              {(stats.netRevenue || stats.grossProfit) && (
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <span>💰</span>
+                    Rentabilité & Profitabilité
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div className="bg-white p-4 rounded-lg border-2 border-blue-300 text-center">
+                      <div className="text-sm text-gray-600 mb-1">CA Total</div>
+                      <div className="text-xl font-bold text-blue-700">{formatCurrency(stats.totalRevenue)}</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border-2 border-red-300 text-center">
+                      <div className="text-sm text-gray-600 mb-1">Notes de Crédit</div>
+                      <div className="text-xl font-bold text-red-700">-{formatCurrency(stats.totalCreditNotes || 0)}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-lg text-center">
+                      <div className="text-sm opacity-90 mb-1">CA Net</div>
+                      <div className="text-xl font-bold">{formatCurrency(stats.netRevenue || 0)}</div>
+                      <div className="text-xs opacity-75 mt-1">Après NC</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border-2 border-orange-300 text-center">
+                      <div className="text-sm text-gray-600 mb-1">Total Dépenses</div>
+                      <div className="text-xl font-bold text-orange-700">-{formatCurrency(stats.totalExpenses || 0)}</div>
+                    </div>
+                    <div className={`p-4 rounded-lg text-center ${(stats.grossProfit || 0) >= 0 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600' : 'bg-gradient-to-br from-red-500 to-red-600'} text-white`}>
+                      <div className="text-sm opacity-90 mb-1">Résultat Brut</div>
+                      <div className="text-xl font-bold">{formatCurrency(stats.grossProfit || 0)}</div>
+                      {stats.profitMargin !== undefined && (
+                        <div className="text-xs opacity-75 mt-1">Marge: {stats.profitMargin.toFixed(1)}%</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {stats.revenuePaid && (
-                <div className="bg-gradient-to-br from-teal-500 to-teal-600 text-white p-4 rounded-lg shadow-lg">
-                  <div className="text-sm opacity-90 mb-1">CA Payé</div>
-                  <div className="text-2xl font-bold">{formatCurrency(stats.revenuePaid)}</div>
+              {/* 3. ANALYSE PAIEMENTS & TRÉSORERIE */}
+              {stats.totalPayments !== undefined && (
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6 mb-6">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <span>💳</span>
+                    Paiements & Trésorerie
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <div className="bg-white p-4 rounded-lg border-2 border-purple-300 text-center">
+                      <div className="text-sm text-gray-600 mb-1">Total Reçus</div>
+                      <div className="text-xl font-bold text-purple-700">{formatCurrency(stats.totalPayments)}</div>
+                      <div className="text-xs text-gray-500 mt-1">{formatNumber(stats.paymentsReceived || 0)} paiements</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border-2 border-green-300 text-center">
+                      <div className="text-sm text-gray-600 mb-1">Clôturés</div>
+                      <div className="text-xl font-bold text-green-700">{formatCurrency(stats.closedPayments || 0)}</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border-2 border-orange-300 text-center">
+                      <div className="text-sm text-gray-600 mb-1">En Attente</div>
+                      <div className="text-xl font-bold text-orange-700">{formatCurrency(stats.openPayments || 0)}</div>
+                      <div className="text-xs text-gray-500 mt-1">{formatNumber(stats.paymentsOutstanding || 0)} en cours</div>
+                    </div>
+                    <div className={`p-4 rounded-lg text-center ${(stats.cashFlow || 0) >= 0 ? 'bg-gradient-to-br from-cyan-500 to-cyan-600' : 'bg-gradient-to-br from-red-500 to-red-600'} text-white`}>
+                      <div className="text-sm opacity-90 mb-1">Cash Flow</div>
+                      <div className="text-xl font-bold">{formatCurrency(stats.cashFlow || 0)}</div>
+                      <div className="text-xs opacity-75 mt-1">Paiements - Dépenses</div>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {stats.revenueOverdue && stats.revenueOverdue > 0 && (
-                <div className="bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-lg shadow-lg">
-                  <div className="text-sm opacity-90 mb-1">CA En Retard</div>
-                  <div className="text-2xl font-bold">{formatCurrency(stats.revenueOverdue)}</div>
+              {/* 4. ANALYSE OFFRES */}
+              {stats.offers > 0 && (
+                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-xl p-6 mb-6">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <span>📊</span>
+                    Analyse des Offres
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+                    <div className="bg-white p-4 rounded-lg border-2 border-gray-300 text-center">
+                      <div className="text-sm text-gray-600 mb-1">Total</div>
+                      <div className="text-2xl font-bold text-gray-700">{formatNumber(stats.offers)}</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border-2 border-green-300 text-center">
+                      <div className="text-sm text-gray-600 mb-1">Acceptées</div>
+                      <div className="text-2xl font-bold text-green-600">{formatNumber(stats.offersAccepted || 0)}</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border-2 border-red-300 text-center">
+                      <div className="text-sm text-gray-600 mb-1">Refusées</div>
+                      <div className="text-2xl font-bold text-red-600">{formatNumber(stats.offersRejected || 0)}</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border-2 border-blue-300 text-center">
+                      <div className="text-sm text-gray-600 mb-1">En Attente</div>
+                      <div className="text-2xl font-bold text-blue-600">{formatNumber(stats.offersPending || 0)}</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border-2 border-gray-300 text-center">
+                      <div className="text-sm text-gray-600 mb-1">Brouillons</div>
+                      <div className="text-2xl font-bold text-gray-600">{formatNumber(stats.offersDraft || 0)}</div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-4 rounded-lg">
+                      <div className="text-sm opacity-90 mb-1">Valeur Totale</div>
+                      <div className="text-xl font-bold">{formatCurrency(stats.totalOffersValue || 0)}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-lg">
+                      <div className="text-sm opacity-90 mb-1">Valeur Acceptée</div>
+                      <div className="text-xl font-bold">{formatCurrency(stats.acceptedOffersValue || 0)}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-lg">
+                      <div className="text-sm opacity-90 mb-1">Taux de Conversion</div>
+                      <div className="text-xl font-bold">{(stats.conversionRate || 0).toFixed(1)}%</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 5. ANALYSE TEMPS & FACTURATION */}
+              {stats.totalHours !== undefined && stats.totalHours > 0 && (
+                <div className="bg-gradient-to-r from-teal-50 to-cyan-50 border-2 border-teal-200 rounded-xl p-6 mb-6">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <span>⏱️</span>
+                    Analyse du Temps & Facturation
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="bg-white p-4 rounded-lg border-2 border-gray-300 text-center">
+                      <div className="text-sm text-gray-600 mb-1">Total Entrées</div>
+                      <div className="text-2xl font-bold text-gray-700">{formatNumber(stats.timesheets)}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-teal-500 to-teal-600 text-white p-4 rounded-lg text-center">
+                      <div className="text-sm opacity-90 mb-1">Heures Totales</div>
+                      <div className="text-2xl font-bold">{formatNumber(stats.totalHours)}h</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-lg text-center">
+                      <div className="text-sm opacity-90 mb-1">Facturables</div>
+                      <div className="text-2xl font-bold">{formatNumber(stats.billableHours || 0)}h</div>
+                      <div className="text-xs opacity-75 mt-1">{formatNumber(stats.billableEntries || 0)} entrées</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border-2 border-gray-300 text-center">
+                      <div className="text-sm text-gray-600 mb-1">Non Facturables</div>
+                      <div className="text-xl font-bold text-gray-700">{formatNumber(stats.nonBillableHours || 0)}h</div>
+                      <div className="text-xs text-gray-500 mt-1">{formatNumber(stats.nonBillableEntries || 0)} entrées</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-lg text-center">
+                      <div className="text-sm opacity-90 mb-1">Taux Facturation</div>
+                      <div className="text-2xl font-bold">{(stats.billabilityRate || 0).toFixed(1)}%</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 bg-white p-4 rounded-lg border border-gray-300 text-center">
+                    <div className="text-sm text-gray-600">Moyenne par Entrée</div>
+                    <div className="text-xl font-bold text-gray-800">{(stats.averageHoursPerEntry || 0).toFixed(2)}h</div>
+                  </div>
+                </div>
+              )}
+
+              {/* 6. PROJETS & TÂCHES */}
+              {(stats.projects > 0 || stats.tasks > 0) && (
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl p-6">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <span>📋</span>
+                    Projets & Tâches
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {stats.projects > 0 && (
+                      <>
+                        <div className="bg-white p-4 rounded-lg border-2 border-indigo-300 text-center">
+                          <div className="text-sm text-gray-600 mb-1">Projets Totaux</div>
+                          <div className="text-2xl font-bold text-indigo-700">{formatNumber(stats.projects)}</div>
+                        </div>
+                        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-lg text-center">
+                          <div className="text-sm opacity-90 mb-1">Actifs</div>
+                          <div className="text-2xl font-bold">{formatNumber(stats.projectsActive || 0)}</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg border-2 border-gray-300 text-center">
+                          <div className="text-sm text-gray-600 mb-1">Terminés</div>
+                          <div className="text-xl font-bold text-gray-700">{formatNumber(stats.projectsCompleted || 0)}</div>
+                        </div>
+                      </>
+                    )}
+                    {stats.tasks > 0 && (
+                      <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 rounded-lg text-center">
+                        <div className="text-sm opacity-90 mb-1">Tâches</div>
+                        <div className="text-2xl font-bold">{formatNumber(stats.tasks)}</div>
+                        <div className="text-xs opacity-75 mt-1">{formatNumber(stats.tasksOpen || 0)} ouvertes / {formatNumber(stats.tasksCompleted || 0)} terminées</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
