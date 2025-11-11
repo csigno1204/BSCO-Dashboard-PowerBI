@@ -1,0 +1,552 @@
+{
+  "templateName": "Bexio Dashboard - Template Professionnel",
+  "version": "2.1",
+  "description": "Template Power BI complet pour l'analyse des données Bexio avec 12 endpoints, 55+ KPIs et visualisations prêtes à l'emploi",
+  "author": "BSCO Dashboard",
+  "lastUpdated": "2025-11-11",
+
+  "dataModel": {
+    "tables": [
+      {
+        "name": "Dashboard",
+        "description": "Feuille de synthèse avec tous les KPIs calculés",
+        "type": "dimension"
+      },
+      {
+        "name": "Contacts",
+        "description": "Clients et fournisseurs",
+        "type": "dimension",
+        "primaryKey": "id"
+      },
+      {
+        "name": "Factures",
+        "description": "Toutes les factures avec statuts",
+        "type": "fact",
+        "primaryKey": "id"
+      },
+      {
+        "name": "Offres",
+        "description": "Devis et propositions commerciales",
+        "type": "fact",
+        "primaryKey": "id"
+      },
+      {
+        "name": "Commandes",
+        "description": "Commandes clients validées",
+        "type": "fact",
+        "primaryKey": "id"
+      },
+      {
+        "name": "Notes de Crédit",
+        "description": "Avoirs clients",
+        "type": "fact",
+        "primaryKey": "id"
+      },
+      {
+        "name": "Projets",
+        "description": "Gestion de projets",
+        "type": "dimension",
+        "primaryKey": "id"
+      },
+      {
+        "name": "Temps",
+        "description": "Heures trackées par projet",
+        "type": "fact"
+      },
+      {
+        "name": "Articles",
+        "description": "Catalogue produits/services",
+        "type": "dimension",
+        "primaryKey": "id"
+      },
+      {
+        "name": "Paiements",
+        "description": "Transactions financières reçues",
+        "type": "fact",
+        "primaryKey": "id"
+      },
+      {
+        "name": "Dépenses",
+        "description": "Frais et coûts d'exploitation",
+        "type": "fact",
+        "primaryKey": "id"
+      },
+      {
+        "name": "Notes",
+        "description": "Communications et historique CRM",
+        "type": "fact",
+        "primaryKey": "id"
+      },
+      {
+        "name": "Tâches",
+        "description": "To-dos et workflow",
+        "type": "fact",
+        "primaryKey": "id"
+      },
+      {
+        "name": "Top Clients",
+        "description": "Top 10 clients par CA",
+        "type": "dimension"
+      },
+      {
+        "name": "Tendances",
+        "description": "CA mensuel sur 12 mois",
+        "type": "fact"
+      },
+      {
+        "name": "Analyse Factures",
+        "description": "Factures enrichies avec statuts détaillés",
+        "type": "fact"
+      }
+    ],
+
+    "relationships": [
+      {
+        "from": "Factures",
+        "fromColumn": "contact_id",
+        "to": "Contacts",
+        "toColumn": "id",
+        "cardinality": "many-to-one",
+        "crossFilterDirection": "single"
+      },
+      {
+        "from": "Offres",
+        "fromColumn": "contact_id",
+        "to": "Contacts",
+        "toColumn": "id",
+        "cardinality": "many-to-one",
+        "crossFilterDirection": "single"
+      },
+      {
+        "from": "Commandes",
+        "fromColumn": "contact_id",
+        "to": "Contacts",
+        "toColumn": "id",
+        "cardinality": "many-to-one",
+        "crossFilterDirection": "single"
+      },
+      {
+        "from": "Notes de Crédit",
+        "fromColumn": "Client ID",
+        "to": "Contacts",
+        "toColumn": "id",
+        "cardinality": "many-to-one",
+        "crossFilterDirection": "single"
+      },
+      {
+        "from": "Projets",
+        "fromColumn": "contact_id",
+        "to": "Contacts",
+        "toColumn": "id",
+        "cardinality": "many-to-one",
+        "crossFilterDirection": "single"
+      },
+      {
+        "from": "Paiements",
+        "fromColumn": "Contact ID",
+        "to": "Contacts",
+        "toColumn": "id",
+        "cardinality": "many-to-one",
+        "crossFilterDirection": "single"
+      },
+      {
+        "from": "Dépenses",
+        "fromColumn": "Fournisseur ID",
+        "to": "Contacts",
+        "toColumn": "id",
+        "cardinality": "many-to-one",
+        "crossFilterDirection": "single"
+      }
+    ]
+  },
+
+  "daxMeasures": {
+    "financial": [
+      {
+        "name": "CA Total",
+        "formula": "SUM(Factures[Montant])",
+        "description": "Chiffre d'affaires total",
+        "formatString": "#,##0.00 CHF"
+      },
+      {
+        "name": "CA Payé",
+        "formula": "CALCULATE(SUM(Factures[Montant]), Factures[Statut] = \"Payée\")",
+        "description": "CA des factures payées",
+        "formatString": "#,##0.00 CHF"
+      },
+      {
+        "name": "CA En Attente",
+        "formula": "CALCULATE(SUM(Factures[Montant]), Factures[Statut] = \"En attente\")",
+        "description": "CA des factures en attente de paiement",
+        "formatString": "#,##0.00 CHF"
+      },
+      {
+        "name": "CA En Retard",
+        "formula": "CALCULATE(SUM(Factures[Montant]), Factures[Statut] = \"En retard\")",
+        "description": "CA des factures en retard",
+        "formatString": "#,##0.00 CHF"
+      },
+      {
+        "name": "Total Notes de Crédit",
+        "formula": "SUM('Notes de Crédit'[Montant])",
+        "description": "Total des avoirs émis",
+        "formatString": "#,##0.00 CHF"
+      },
+      {
+        "name": "CA Net",
+        "formula": "[CA Total] - [Total Notes de Crédit]",
+        "description": "CA net après notes de crédit",
+        "formatString": "#,##0.00 CHF"
+      },
+      {
+        "name": "Total Paiements",
+        "formula": "SUM(Paiements[Montant])",
+        "description": "Total des paiements encaissés",
+        "formatString": "#,##0.00 CHF"
+      },
+      {
+        "name": "Paiements En Attente",
+        "formula": "CALCULATE(SUM(Paiements[Montant]), Paiements[En attente] = \"Oui\")",
+        "description": "Paiements non encore encaissés",
+        "formatString": "#,##0.00 CHF"
+      },
+      {
+        "name": "Total Dépenses",
+        "formula": "SUM(Dépenses[Montant])",
+        "description": "Total des frais et dépenses",
+        "formatString": "#,##0.00 CHF"
+      },
+      {
+        "name": "Marge Brute",
+        "formula": "[CA Net] - [Total Dépenses]",
+        "description": "Marge après dépenses",
+        "formatString": "#,##0.00 CHF"
+      },
+      {
+        "name": "% Marge",
+        "formula": "DIVIDE([Marge Brute], [CA Net], 0)",
+        "description": "Pourcentage de marge",
+        "formatString": "0.00%"
+      },
+      {
+        "name": "DSO (Jours)",
+        "formula": "DIVIDE([CA En Attente] + [CA En Retard], [CA Total] / 365, 0)",
+        "description": "Days Sales Outstanding - délai moyen d'encaissement",
+        "formatString": "0"
+      }
+    ],
+
+    "sales": [
+      {
+        "name": "Valeur Offres",
+        "formula": "SUM(Offres[Montant])",
+        "description": "Valeur totale des offres",
+        "formatString": "#,##0.00 CHF"
+      },
+      {
+        "name": "Offres Acceptées",
+        "formula": "CALCULATE(COUNT(Offres[ID]), Offres[Statut ID] = 8)",
+        "description": "Nombre d'offres acceptées",
+        "formatString": "0"
+      },
+      {
+        "name": "Taux Conversion",
+        "formula": "DIVIDE([Offres Acceptées], COUNT(Offres[ID]), 0)",
+        "description": "Taux de conversion des offres",
+        "formatString": "0.00%"
+      },
+      {
+        "name": "Panier Moyen",
+        "formula": "DIVIDE([CA Total], DISTINCTCOUNT(Factures[Client ID]), 0)",
+        "description": "CA moyen par client",
+        "formatString": "#,##0.00 CHF"
+      },
+      {
+        "name": "Nb Clients Actifs",
+        "formula": "DISTINCTCOUNT(Factures[Client ID])",
+        "description": "Nombre de clients ayant généré du CA",
+        "formatString": "0"
+      }
+    ],
+
+    "operations": [
+      {
+        "name": "Heures Totales",
+        "formula": "SUM(Temps[duration])",
+        "description": "Total des heures trackées",
+        "formatString": "#,##0.0"
+      },
+      {
+        "name": "Heures Facturables",
+        "formula": "CALCULATE(SUM(Temps[duration]), Temps[allowable_bill] = TRUE())",
+        "description": "Heures facturables",
+        "formatString": "#,##0.0"
+      },
+      {
+        "name": "Taux Facturation",
+        "formula": "DIVIDE([Heures Facturables], [Heures Totales], 0)",
+        "description": "Pourcentage d'heures facturables",
+        "formatString": "0.00%"
+      },
+      {
+        "name": "Projets Actifs",
+        "formula": "CALCULATE(COUNT(Projets[id]), Projets[pr_state_id] IN {1, 2})",
+        "description": "Nombre de projets en cours",
+        "formatString": "0"
+      },
+      {
+        "name": "Tâches Ouvertes",
+        "formula": "CALCULATE(COUNT(Tâches[ID]), Tâches[Statut] IN {\"Ouvert\", \"En cours\"})",
+        "description": "Tâches non terminées",
+        "formatString": "0"
+      }
+    ]
+  },
+
+  "reportPages": [
+    {
+      "name": "📊 Dashboard Principal",
+      "description": "Vue d'ensemble avec KPIs principaux",
+      "visualizations": [
+        {
+          "type": "Card",
+          "measure": "CA Net",
+          "position": { "x": 0, "y": 0, "width": 3, "height": 2 }
+        },
+        {
+          "type": "Card",
+          "measure": "Marge Brute",
+          "position": { "x": 3, "y": 0, "width": 3, "height": 2 }
+        },
+        {
+          "type": "Card",
+          "measure": "% Marge",
+          "position": { "x": 6, "y": 0, "width": 3, "height": 2 }
+        },
+        {
+          "type": "Card",
+          "measure": "Nb Clients Actifs",
+          "position": { "x": 9, "y": 0, "width": 3, "height": 2 }
+        },
+        {
+          "type": "Line Chart",
+          "title": "Évolution CA Mensuel",
+          "xAxis": "Tendances[Mois]",
+          "yAxis": "Tendances[Chiffre d'affaires]",
+          "position": { "x": 0, "y": 2, "width": 6, "height": 4 }
+        },
+        {
+          "type": "Bar Chart",
+          "title": "Top 10 Clients",
+          "axis": "Top Clients[Nom]",
+          "values": "Top Clients[Chiffre d'affaires]",
+          "position": { "x": 6, "y": 2, "width": 6, "height": 4 }
+        },
+        {
+          "type": "Donut Chart",
+          "title": "Répartition CA par Statut",
+          "legend": "Factures[Statut]",
+          "values": "Factures[Montant]",
+          "position": { "x": 0, "y": 6, "width": 4, "height": 3 }
+        },
+        {
+          "type": "Gauge",
+          "title": "Taux de Conversion",
+          "measure": "Taux Conversion",
+          "target": "0.30",
+          "position": { "x": 4, "y": 6, "width": 4, "height": 3 }
+        },
+        {
+          "type": "Table",
+          "title": "Factures Récentes",
+          "columns": ["N° Facture", "Client", "Montant", "Statut", "Date échéance"],
+          "rows": 10,
+          "position": { "x": 8, "y": 6, "width": 4, "height": 3 }
+        }
+      ]
+    },
+    {
+      "name": "💰 Analyse Financière",
+      "description": "Détails financiers et trésorerie",
+      "visualizations": [
+        {
+          "type": "Multi-Card",
+          "measures": ["CA Total", "CA Payé", "CA En Attente", "CA En Retard", "Total Paiements", "Total Dépenses"],
+          "position": { "x": 0, "y": 0, "width": 12, "height": 2 }
+        },
+        {
+          "type": "Waterfall Chart",
+          "title": "Évolution Trésorerie",
+          "categories": ["CA Total", "Notes de Crédit", "CA Net", "Dépenses", "Marge Brute"],
+          "position": { "x": 0, "y": 2, "width": 6, "height": 4 }
+        },
+        {
+          "type": "Column Chart",
+          "title": "CA par Statut",
+          "xAxis": "Factures[Statut]",
+          "yAxis": "[CA Total]",
+          "position": { "x": 6, "y": 2, "width": 6, "height": 4 }
+        },
+        {
+          "type": "Matrix",
+          "title": "Analyse Mensuelle Détaillée",
+          "rows": "Tendances[Mois]",
+          "values": ["[CA Total]", "[Total Paiements]", "[Total Dépenses]", "[Marge Brute]"],
+          "position": { "x": 0, "y": 6, "width": 12, "height": 3 }
+        }
+      ]
+    },
+    {
+      "name": "👥 Analyse Clients",
+      "description": "Segmentation et comportement clients",
+      "visualizations": [
+        {
+          "type": "Card",
+          "measure": "Nb Clients Actifs",
+          "position": { "x": 0, "y": 0, "width": 3, "height": 2 }
+        },
+        {
+          "type": "Card",
+          "measure": "Panier Moyen",
+          "position": { "x": 3, "y": 0, "width": 3, "height": 2 }
+        },
+        {
+          "type": "Treemap",
+          "title": "CA par Client",
+          "group": "Contacts[name_1]",
+          "values": "[CA Total]",
+          "position": { "x": 0, "y": 2, "width": 6, "height": 4 }
+        },
+        {
+          "type": "Map",
+          "title": "Répartition Géographique",
+          "location": "Contacts[city]",
+          "size": "[CA Total]",
+          "position": { "x": 6, "y": 2, "width": 6, "height": 4 }
+        },
+        {
+          "type": "Table",
+          "title": "Top Clients Détaillé",
+          "columns": ["Nom", "Ville", "Email", "CA", "Nb Factures"],
+          "position": { "x": 0, "y": 6, "width": 12, "height": 3 }
+        }
+      ]
+    },
+    {
+      "name": "📁 Projets & Opérations",
+      "description": "Suivi projets, temps et tâches",
+      "visualizations": [
+        {
+          "type": "Card",
+          "measure": "Projets Actifs",
+          "position": { "x": 0, "y": 0, "width": 2, "height": 2 }
+        },
+        {
+          "type": "Card",
+          "measure": "Heures Totales",
+          "position": { "x": 2, "y": 0, "width": 2, "height": 2 }
+        },
+        {
+          "type": "Card",
+          "measure": "Taux Facturation",
+          "position": { "x": 4, "y": 0, "width": 2, "height": 2 }
+        },
+        {
+          "type": "Card",
+          "measure": "Tâches Ouvertes",
+          "position": { "x": 6, "y": 0, "width": 2, "height": 2 }
+        },
+        {
+          "type": "Bar Chart",
+          "title": "Heures par Projet",
+          "axis": "Projets[name]",
+          "values": "[Heures Totales]",
+          "position": { "x": 0, "y": 2, "width": 6, "height": 4 }
+        },
+        {
+          "type": "Stacked Column Chart",
+          "title": "Heures Facturables vs Non Facturables",
+          "xAxis": "Projets[name]",
+          "yAxis": ["[Heures Facturables]", "[Heures Totales]"],
+          "position": { "x": 6, "y": 2, "width": 6, "height": 4 }
+        },
+        {
+          "type": "Kanban",
+          "title": "Tâches par Statut",
+          "columns": "Tâches[Statut]",
+          "cards": "Tâches[Titre]",
+          "position": { "x": 0, "y": 6, "width": 12, "height": 3 }
+        }
+      ]
+    }
+  ],
+
+  "theme": {
+    "name": "Professional Bexio",
+    "colors": {
+      "primary": "#6366F1",
+      "secondary": "#EC4899",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "danger": "#EF4444",
+      "dataColors": [
+        "#6366F1",
+        "#EC4899",
+        "#10B981",
+        "#F59E0B",
+        "#EF4444",
+        "#8B5CF6",
+        "#14B8A6",
+        "#F97316"
+      ]
+    },
+    "fonts": {
+      "title": "Segoe UI",
+      "body": "Segoe UI"
+    }
+  },
+
+  "recommendations": {
+    "dataRefresh": {
+      "frequency": "Daily",
+      "time": "06:00",
+      "note": "Synchroniser quotidiennement pour des données à jour"
+    },
+    "filters": [
+      {
+        "column": "Factures[Date]",
+        "type": "Date Range",
+        "default": "Last 12 months"
+      },
+      {
+        "column": "Contacts[city]",
+        "type": "Slicer",
+        "multiSelect": true
+      },
+      {
+        "column": "Projets[pr_state_id]",
+        "type": "Dropdown",
+        "default": "Active projects"
+      }
+    ],
+    "performance": [
+      "Utilisez l'importation de données plutôt que DirectQuery pour de meilleures performances",
+      "Créez des colonnes calculées uniquement si nécessaire, privilégiez les mesures DAX",
+      "Limitez les relations bidirectionnelles",
+      "Utilisez des agrégations pour les grandes tables"
+    ]
+  },
+
+  "instructions": {
+    "step1": "Téléchargez le fichier Excel depuis la page Synchronisation",
+    "step2": "Ouvrez Power BI Desktop",
+    "step3": "Fichier > Obtenir des données > Excel",
+    "step4": "Sélectionnez toutes les feuilles et cliquez sur Charger",
+    "step5": "Allez dans l'onglet Modélisation pour créer les relations listées ci-dessus",
+    "step6": "Créez les mesures DAX en copiant les formules de cette configuration",
+    "step7": "Créez les pages de rapport en suivant les layouts recommandés",
+    "step8": "Appliquez le thème de couleurs",
+    "step9": "Publiez sur Power BI Service",
+    "step10": "Configurez l'actualisation automatique"
+  }
+}

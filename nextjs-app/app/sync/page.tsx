@@ -101,32 +101,118 @@ export default function SyncPage() {
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg">
-            <span className="text-3xl mb-2">👥</span>
-            <span className="text-2xl font-bold text-primary">{formatNumber(stats.contacts)}</span>
-            <span className="text-sm text-gray-600">Contacts</span>
-          </div>
+        {/* Stats - 12 Endpoints */}
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">📊 Données Extraites (12 Endpoints)</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="flex flex-col items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-2xl mb-1">👥</span>
+              <span className="text-xl font-bold text-blue-700">{formatNumber(stats.contacts || 0)}</span>
+              <span className="text-xs text-gray-600">Contacts</span>
+            </div>
 
-          <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg">
-            <span className="text-3xl mb-2">📄</span>
-            <span className="text-2xl font-bold text-primary">{formatNumber(stats.invoices)}</span>
-            <span className="text-sm text-gray-600">Factures</span>
-          </div>
+            <div className="flex flex-col items-center p-3 bg-green-50 rounded-lg border border-green-200">
+              <span className="text-2xl mb-1">📄</span>
+              <span className="text-xl font-bold text-green-700">{formatNumber(stats.invoices || 0)}</span>
+              <span className="text-xs text-gray-600">Factures</span>
+            </div>
 
-          <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg">
-            <span className="text-3xl mb-2">📁</span>
-            <span className="text-2xl font-bold text-primary">{formatNumber(stats.projects)}</span>
-            <span className="text-sm text-gray-600">Projets</span>
-          </div>
+            <div className="flex flex-col items-center p-3 bg-purple-50 rounded-lg border border-purple-200">
+              <span className="text-2xl mb-1">📝</span>
+              <span className="text-xl font-bold text-purple-700">{formatNumber(stats.offers || 0)}</span>
+              <span className="text-xs text-gray-600">Offres</span>
+            </div>
 
-          <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg">
-            <span className="text-3xl mb-2">💰</span>
-            <span className="text-2xl font-bold text-primary">{formatCurrency(stats.totalRevenue)}</span>
-            <span className="text-sm text-gray-600">CA Total</span>
+            <div className="flex flex-col items-center p-3 bg-orange-50 rounded-lg border border-orange-200">
+              <span className="text-2xl mb-1">🛒</span>
+              <span className="text-xl font-bold text-orange-700">{formatNumber(stats.orders || 0)}</span>
+              <span className="text-xs text-gray-600">Commandes</span>
+            </div>
+
+            <div className="flex flex-col items-center p-3 bg-red-50 rounded-lg border border-red-200">
+              <span className="text-2xl mb-1">💳</span>
+              <span className="text-xl font-bold text-red-700">{formatNumber(stats.creditNotes || 0)}</span>
+              <span className="text-xs text-gray-600">Notes Crédit</span>
+            </div>
+
+            <div className="flex flex-col items-center p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+              <span className="text-2xl mb-1">📁</span>
+              <span className="text-xl font-bold text-indigo-700">{formatNumber(stats.projects || 0)}</span>
+              <span className="text-xs text-gray-600">Projets</span>
+            </div>
+
+            <div className="flex flex-col items-center p-3 bg-teal-50 rounded-lg border border-teal-200">
+              <span className="text-2xl mb-1">⏱️</span>
+              <span className="text-xl font-bold text-teal-700">{formatNumber(stats.timesheets || 0)}</span>
+              <span className="text-xs text-gray-600">Temps</span>
+            </div>
+
+            <div className="flex flex-col items-center p-3 bg-pink-50 rounded-lg border border-pink-200">
+              <span className="text-2xl mb-1">📦</span>
+              <span className="text-xl font-bold text-pink-700">{formatNumber(stats.articles || 0)}</span>
+              <span className="text-xs text-gray-600">Articles</span>
+            </div>
+
+            <div className="flex flex-col items-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+              <span className="text-2xl mb-1">💵</span>
+              <span className="text-xl font-bold text-yellow-700">{formatNumber(stats.payments || 0)}</span>
+              <span className="text-xs text-gray-600">Paiements</span>
+            </div>
+
+            <div className="flex flex-col items-center p-3 bg-rose-50 rounded-lg border border-rose-200">
+              <span className="text-2xl mb-1">💸</span>
+              <span className="text-xl font-bold text-rose-700">{formatNumber(stats.expenses || 0)}</span>
+              <span className="text-xs text-gray-600">Dépenses</span>
+            </div>
+
+            <div className="flex flex-col items-center p-3 bg-cyan-50 rounded-lg border border-cyan-200">
+              <span className="text-2xl mb-1">📝</span>
+              <span className="text-xl font-bold text-cyan-700">{formatNumber(stats.notes || 0)}</span>
+              <span className="text-xs text-gray-600">Notes</span>
+            </div>
+
+            <div className="flex flex-col items-center p-3 bg-lime-50 rounded-lg border border-lime-200">
+              <span className="text-2xl mb-1">✅</span>
+              <span className="text-xl font-bold text-lime-700">{formatNumber(stats.tasks || 0)}</span>
+              <span className="text-xs text-gray-600">Tâches</span>
+            </div>
           </div>
         </div>
+
+        {/* KPIs Financiers */}
+        {stats.totalRevenue > 0 && (
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">💰 Indicateurs Financiers</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-lg shadow-lg">
+                <div className="text-sm opacity-90 mb-1">CA Total</div>
+                <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue || 0)}</div>
+              </div>
+
+              {stats.netRevenue && (
+                <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-lg shadow-lg">
+                  <div className="text-sm opacity-90 mb-1">CA Net</div>
+                  <div className="text-2xl font-bold">{formatCurrency(stats.netRevenue)}</div>
+                  <div className="text-xs opacity-75 mt-1">Après notes crédit</div>
+                </div>
+              )}
+
+              {stats.revenuePaid && (
+                <div className="bg-gradient-to-br from-teal-500 to-teal-600 text-white p-4 rounded-lg shadow-lg">
+                  <div className="text-sm opacity-90 mb-1">CA Payé</div>
+                  <div className="text-2xl font-bold">{formatCurrency(stats.revenuePaid)}</div>
+                </div>
+              )}
+
+              {stats.revenueOverdue && stats.revenueOverdue > 0 && (
+                <div className="bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-lg shadow-lg">
+                  <div className="text-sm opacity-90 mb-1">CA En Retard</div>
+                  <div className="text-2xl font-bold">{formatCurrency(stats.revenueOverdue)}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex gap-4 mb-6">

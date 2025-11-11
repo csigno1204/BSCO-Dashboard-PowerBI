@@ -5,10 +5,38 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 interface AppState {
   apiKey: string | null
   stats: {
+    // 12 Endpoints counts
     contacts: number
     invoices: number
+    offers: number
+    orders: number
+    creditNotes: number
     projects: number
+    timesheets: number
+    articles: number
+    payments: number
+    expenses: number
+    notes: number
+    tasks: number
+
+    // Financial KPIs
     totalRevenue: number
+    netRevenue?: number
+    revenuePaid?: number
+    revenuePending?: number
+    revenueOverdue?: number
+    totalCreditNotes?: number
+    totalPayments?: number
+    totalExpenses?: number
+
+    // Operational KPIs
+    invoicesPaid?: number
+    invoicesPending?: number
+    invoicesOverdue?: number
+    totalHours?: number
+    billableHours?: number
+    conversionRate?: string
+    openTasks?: number
   }
   lastSync: string | null
   isConfigured: boolean
@@ -39,9 +67,21 @@ export default function AppProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>({
     apiKey: null,
     stats: {
+      // 12 Endpoints
       contacts: 0,
       invoices: 0,
+      offers: 0,
+      orders: 0,
+      creditNotes: 0,
       projects: 0,
+      timesheets: 0,
+      articles: 0,
+      payments: 0,
+      expenses: 0,
+      notes: 0,
+      tasks: 0,
+
+      // Financial KPIs
       totalRevenue: 0,
     },
     lastSync: null,

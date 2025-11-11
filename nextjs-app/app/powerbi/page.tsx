@@ -290,45 +290,148 @@ export default function PowerBI() {
       {activeTab === 'template' && (
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h2 className="text-2xl font-bold mb-4">📊 Template Power BI (.pbix)</h2>
+            <h2 className="text-2xl font-bold mb-4">📊 Templates Power BI Professionnels</h2>
             <p className="text-gray-700 mb-6">
-              Téléchargez notre template pré-configuré avec les visualisations recommandées pour vos données Bexio.
+              Téléchargez nos templates et configurations pré-configurés pour démarrer rapidement avec vos données Bexio.
             </p>
 
+            {/* Pack Complet */}
             <div className="bg-gradient-to-r from-primary to-secondary text-white p-6 rounded-lg mb-6">
-              <h3 className="text-xl font-bold mb-4">✨ Contenu du Template</h3>
-              <ul className="space-y-2">
-                <li>✅ Dashboard principal avec KPIs</li>
-                <li>✅ Page Analyse Clients avec top clients</li>
-                <li>✅ Page Analyse Financière (CA, factures, offres)</li>
-                <li>✅ Page Projets & Temps</li>
-                <li>✅ Relations entre tables pré-configurées</li>
-                <li>✅ Mesures DAX calculées</li>
-                <li>✅ Thème de couleurs personnalisé</li>
+              <h3 className="text-xl font-bold mb-4">🎁 Pack Complet - RECOMMANDÉ</h3>
+              <ul className="space-y-2 mb-4">
+                <li>✅ Configuration complète JSON avec 35+ mesures DAX</li>
+                <li>✅ Guide technique détaillé (4000+ mots)</li>
+                <li>✅ 4 pages de rapports prêtes à l'emploi</li>
+                <li>✅ Toutes les relations de données configurées</li>
+                <li>✅ Thème de couleurs professionnel</li>
+                <li>✅ Instructions pas-à-pas</li>
               </ul>
+              <button
+                onClick={() => window.open('/api/powerbi-template?type=both', '_blank')}
+                className="w-full bg-white text-primary hover:bg-gray-100 px-6 py-4 rounded-lg transition-colors font-semibold text-lg flex items-center justify-center gap-2"
+              >
+                <span className="text-2xl">📥</span>
+                Télécharger le Pack Complet
+              </button>
             </div>
 
-            <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded mb-6">
-              <h3 className="font-bold text-blue-900 mb-2">📝 Instructions d'Utilisation</h3>
-              <ol className="list-decimal list-inside space-y-2 text-blue-800 text-sm">
-                <li>Téléchargez le template .pbix ci-dessous</li>
-                <li>Ouvrez-le dans Power BI Desktop</li>
-                <li>Cliquez sur <strong>"Transformer les données"</strong> → <strong>"Paramètres de la source de données"</strong></li>
-                <li>Pointez vers votre fichier Excel exporté</li>
-                <li>Cliquez sur <strong>"Actualiser"</strong></li>
-                <li>Personnalisez les visuels selon vos besoins</li>
+            {/* Options individuelles */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {/* Config JSON */}
+              <div className="bg-blue-50 border-2 border-blue-200 p-5 rounded-lg">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-3xl">⚙️</span>
+                  <h3 className="text-lg font-bold text-blue-900">Configuration JSON</h3>
+                </div>
+                <p className="text-sm text-blue-800 mb-4">
+                  Fichier JSON avec toutes les mesures DAX, relations, et layouts de visualisations
+                </p>
+                <button
+                  onClick={() => window.open('/api/powerbi-template?type=config', '_blank')}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition-colors font-semibold"
+                >
+                  📥 Télécharger Config JSON
+                </button>
+              </div>
+
+              {/* Guide Markdown */}
+              <div className="bg-green-50 border-2 border-green-200 p-5 rounded-lg">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-3xl">📖</span>
+                  <h3 className="text-lg font-bold text-green-900">Guide Technique</h3>
+                </div>
+                <p className="text-sm text-green-800 mb-4">
+                  Documentation complète avec explications détaillées et code DAX prêt à copier
+                </p>
+                <button
+                  onClick={() => window.open('/api/powerbi-template?type=guide', '_blank')}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg transition-colors font-semibold"
+                >
+                  📥 Télécharger Guide MD
+                </button>
+              </div>
+            </div>
+
+            {/* Instructions */}
+            <div className="bg-purple-50 border-l-4 border-purple-500 p-6 rounded mb-6">
+              <h3 className="font-bold text-purple-900 mb-3 flex items-center gap-2">
+                <span className="text-xl">🚀</span>
+                Démarrage Rapide
+              </h3>
+              <ol className="list-decimal list-inside space-y-2 text-purple-800">
+                <li>Téléchargez le <strong>Pack Complet</strong> ci-dessus</li>
+                <li>Synchronisez vos données et téléchargez le <strong>fichier Excel</strong></li>
+                <li>Ouvrez <strong>Power BI Desktop</strong></li>
+                <li>Importez le fichier Excel (Obtenir des données → Excel)</li>
+                <li>Créez les <strong>relations</strong> listées dans le fichier JSON</li>
+                <li>Copiez les <strong>mesures DAX</strong> depuis le guide</li>
+                <li>Créez vos <strong>visuels</strong> en suivant les layouts recommandés</li>
+                <li>Appliquez le <strong>thème de couleurs</strong></li>
+                <li><strong>Publiez</strong> sur Power BI Service</li>
               </ol>
             </div>
 
-            <button
-              onClick={() => alert('Template à créer - fichier .pbix avec configuration de base')}
-              className="w-full bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-lg transition-colors font-semibold text-lg"
-            >
-              📥 Télécharger le Template (.pbix)
-            </button>
+            {/* Contenu du Template */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white border-2 border-gray-200 p-4 rounded-lg">
+                <h4 className="font-bold mb-3 flex items-center gap-2">
+                  <span>📊</span> Mesures DAX Incluses (35+)
+                </h4>
+                <ul className="text-sm text-gray-700 space-y-1">
+                  <li>• CA Total, CA Payé, CA En Attente</li>
+                  <li>• CA Net (après notes de crédit)</li>
+                  <li>• Marge Brute & % Marge</li>
+                  <li>• DSO (Days Sales Outstanding)</li>
+                  <li>• Taux de Conversion des Offres</li>
+                  <li>• Taux de Facturation des Heures</li>
+                  <li>• Panier Moyen par Client</li>
+                  <li>• Nb Clients Actifs</li>
+                  <li>• + 27 autres mesures...</li>
+                </ul>
+              </div>
 
-            <p className="text-sm text-gray-600 mt-4 text-center">
-              Version 1.0 - Compatible Power BI Desktop Novembre 2024
+              <div className="bg-white border-2 border-gray-200 p-4 rounded-lg">
+                <h4 className="font-bold mb-3 flex items-center gap-2">
+                  <span>📄</span> 4 Pages de Rapports
+                </h4>
+                <ul className="text-sm text-gray-700 space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold">1.</span>
+                    <div>
+                      <strong>Dashboard Principal</strong>
+                      <p className="text-gray-600">KPIs, évolution CA, top clients</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold">2.</span>
+                    <div>
+                      <strong>Analyse Financière</strong>
+                      <p className="text-gray-600">Trésorerie, waterfall, paiements</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold">3.</span>
+                    <div>
+                      <strong>Analyse Clients</strong>
+                      <p className="text-gray-600">Segmentation, géo, comportement</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold">4.</span>
+                    <div>
+                      <strong>Projets & Opérations</strong>
+                      <p className="text-gray-600">Temps, tâches, rentabilité</p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Note version */}
+            <p className="text-sm text-gray-600 mt-6 text-center">
+              Version 2.1 - Compatible Power BI Desktop (Dernière version)
+              <br />
+              12 endpoints Bexio • 16 feuilles Excel • 55+ KPIs
             </p>
           </div>
         </div>
