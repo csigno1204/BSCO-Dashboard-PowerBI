@@ -5,7 +5,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 interface AppState {
   apiKey: string | null
   stats: {
-    // 12 Endpoints counts
+    // ========== BASIC COUNTS ==========
     contacts: number
     invoices: number
     offers: number
@@ -19,24 +19,75 @@ interface AppState {
     notes: number
     tasks: number
 
-    // Financial KPIs
-    totalRevenue: number
-    netRevenue?: number
-    revenuePaid?: number
-    revenuePending?: number
-    revenueOverdue?: number
-    totalCreditNotes?: number
-    totalPayments?: number
-    totalExpenses?: number
-
-    // Operational KPIs
+    // ========== INVOICE DETAILS ==========
+    invoicesValid?: number
     invoicesPaid?: number
+    invoicesPartiallyPaid?: number
     invoicesPending?: number
     invoicesOverdue?: number
+    invoicesDraft?: number
+    invoicesCancelled?: number
+
+    // ========== REVENUE DETAILS ==========
+    totalRevenue: number
+    revenuePaid?: number
+    revenuePartiallyPaid?: number
+    revenuePending?: number
+    revenueOverdue?: number
+    averageInvoice?: number
+
+    // ========== NET REVENUE & PROFITABILITY ==========
+    totalCreditNotes?: number
+    netRevenue?: number
+    totalExpenses?: number
+    grossProfit?: number
+    profitMargin?: number
+
+    // ========== CASH FLOW ==========
+    totalPayments?: number
+    closedPayments?: number
+    openPayments?: number
+    paymentsReceived?: number
+    paymentsOutstanding?: number
+    cashFlow?: number
+
+    // ========== OFFERS DETAILS ==========
+    offersAccepted?: number
+    offersRejected?: number
+    offersPending?: number
+    offersDraft?: number
+    totalOffersValue?: number
+    acceptedOffersValue?: number
+    conversionRate?: number
+
+    // ========== ORDERS DETAILS ==========
+    totalOrdersValue?: number
+
+    // ========== TIME TRACKING ==========
     totalHours?: number
     billableHours?: number
-    conversionRate?: string
-    openTasks?: number
+    nonBillableHours?: number
+    billableEntries?: number
+    nonBillableEntries?: number
+    billabilityRate?: number
+    averageHoursPerEntry?: number
+
+    // ========== PROJECTS ==========
+    projectsActive?: number
+    projectsCompleted?: number
+
+    // ========== TASKS ==========
+    tasksOpen?: number
+    tasksCompleted?: number
+
+    // ========== EXPENSES ==========
+    averageExpense?: number
+
+    // ========== TOP PERFORMERS ==========
+    topClientsCount?: number
+
+    // ========== ARTICLES ==========
+    articlesValue?: number
   }
   lastSync: string | null
   isConfigured: boolean
